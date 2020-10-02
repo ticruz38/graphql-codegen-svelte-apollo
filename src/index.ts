@@ -5,18 +5,13 @@ import { camelCase } from "camel-case";
 
 module.exports = {
   plugin: (schema, documents, config, info) => {
-    // const typesMap = schema.getTypeMap();
-    // return documents
-    //     .map((d) => d.document.definitions.map((s) => s.kind))
-    //     .join("\n");
     const imports = [
       config.clientPath
         ? `import client from "${config.clientPath}";`
         : `import { ApolloClient } from "apollo-client";`,
       `import {query, mutation, subscription} from "svelte-apollo";`,
+      `import { writable } from "svelte/store";`,
     ];
-    // keep operations DSL in codegen
-    console.log(documents.map((d) => d));
     // const docs = documents.filter(d => d.document.definitions.)
     const allAst = concatAST(documents.map((d) => d.document));
     const operations = (allAst.definitions.filter(
@@ -58,19 +53,14 @@ module.exports = {
         return dsl + "\n" + operation + "\n" + statelessOperation;
       })
       .join("\n");
-    // return {
-    //     prepend: imports,
-    //     content: operations,
-    // };
     return {
       prepend: imports,
       content: operations,
     };
-    // allAst.definitions.map((d) => console.log(d));
-    // return Object.keys(typesMap).join("\n");
   },
   validate: (schema, documents, config, outputFile, allPlugins) => {
-    console.log(allPlugins, config);
-    // allPlugins.map(p => p)
+    if (!config.clientPath) {
+      console.warn("Client path is not present in config");
+    }
   },
 } as CodegenPlugin;
