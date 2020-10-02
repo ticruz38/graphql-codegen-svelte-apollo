@@ -21,6 +21,13 @@
     "type": "git",
     "url": "git+https://github.com/ticruz38/graphql-codegen-svelte-apollo.git"
   },
+  "keywords": [
+    "svelte",
+    "apollo",
+    "svelte-apollo",
+    "graphql",
+    "graphql-codegen"
+  ],
   "bugs": {
     "url": "https://github.com/ticruz38/graphql-codegen-svelte-apollo/issues"
   },

@@ -1,14 +1,18 @@
 # Graphql generator for svelte-apollo
+
 GraphQL Code Generator plugin to generate ts-ready svelte-apollo queries from graphql.
 
 ## Motivation
+
 Apollo and graphql-code-generator are a powerfull combination for data management in the front-end.
 Svelte-apollo is a fantastic wrapper around the apollo-client, but unlike other big frameworks, svelte was still missing a graphql-code-generator plugin for client queries.
 
 ## Install
+
 `npm i -S graphql-codegen-svelte-apollo`
 
 ## Configuration
+
 - `clientPath` (default: null): Path to the apollo client for this project (should point to a file with an apollo-client as default export)
 
 Note: typescript and typescript-operations plugins are required.
@@ -35,9 +39,10 @@ hooks:
 
 ```
 
-### Usage example
+## Usage example
 
 Take for example this query that will request all transactions for one ethereum address
+
 ```
 const TRANSACTION_FRAGMENT = gql`
     fragment TransactionFragment on TransactionDescription {
@@ -63,6 +68,7 @@ const TRANSACTIONS = gql`
 ```
 
 graphql-code-generator will generate:
+
 ```
 export const TransactionsDoc = gql`
     fragment TransactionFragment on TransactionDescription {
@@ -94,6 +100,7 @@ export const Transactions = (variables: TransactionsQueryVariables) =>
 ```
 
 And use it as follow in your svelte file:
+
 ```
 <script lang="ts">
   var address = "0x0000000000000000000000000000"
@@ -106,6 +113,8 @@ And use it as follow in your svelte file:
   {/each}
 {/await}
 ```
+
+## Stateless queries
 
 If the query is stateless (has no variables), the plugin will generate both the queries and the query result as observable.
 
@@ -120,6 +129,7 @@ query CurrentUser {
 ```
 
 graphql-code-generator will generate:
+
 ```
 export const CurrentUserDoc = gql`
     query CurrentUser {
@@ -148,6 +158,7 @@ export const currentUser = writable<CurrentUserQuery>({}, (set) => {
 We have the svelte-apollo query CurrentUser, and the observable result currentUser.
 
 Now in your svelte file, you can simply do this:
+
 ```
 <script lang="ts">
   import { currentUser } from "codegen"
@@ -155,5 +166,3 @@ Now in your svelte file, you can simply do this:
 
 <div>Hello {$currentUser.username} !!</div>
 ```
-
-
