@@ -5,18 +5,32 @@ import { camelCase } from "camel-case";
 
 module.exports = {
   plugin: (schema, documents, config, info) => {
+    const allAst = concatAST(documents.map((d) => d.document));
+    const operations = allAst.definitions.filter(
+      (d) => d.kind === Kind.OPERATION_DEFINITION
+    ) as OperationDefinitionNode[];
+
+    const operationImport = `${
+      operations.some((op) => op.operation == "query") ? "query, " : ""
+    }${
+      operations.some((op) => op.operation == "mutation") ? "mutation, " : ""
+    }${
+      operations.some((op) => op.operation == "subscription")
+        ? "subscription, "
+        : ""
+    }`.slice(0, -2);
+
     const imports = [
       config.clientPath
         ? `import client from "${config.clientPath}";`
         : `import { ApolloClient } from "apollo-client";`,
-      `import {query, mutation, subscription} from "svelte-apollo";`,
+      `import { ${operationImport} } from "svelte-apollo";`,
       `import { writable } from "svelte/store";`,
+      `import gql from "graphql-tag"`,
     ];
     // const docs = documents.filter(d => d.document.definitions.)
-    const allAst = concatAST(documents.map((d) => d.document));
-    const operations = (allAst.definitions.filter(
-      (d) => d.kind === Kind.OPERATION_DEFINITION
-    ) as OperationDefinitionNode[])
+
+    const ops = operations
       .map((o) => {
         const dsl = `export const ${o.name.value}Doc = gql\`${
           documents.find((d) =>
@@ -29,8 +43,8 @@ module.exports = {
         const operation = `export const ${o.name.value} = (${
           config.clientPath ? "" : "client: ApolloClient, "
         }variables: ${opv}) =>
-  ${o.operation}<${op}, any, ${o.name.value}${opv}>(client, {
-    ${o.name.value}: ${o.name.value}Doc,
+  ${o.operation}<${op}, any, ${opv}>(client, {
+    ${o.operation}: ${o.name.value}Doc,
     variables
   })`;
         let statelessOperation = "";
@@ -44,7 +58,7 @@ module.exports = {
           )} = writable<${op}>({}, (set) => {
                       const p = ${o.name.value}({})
                       p.subscribe((v) => {
-                        v.then(res => {
+                        v["then"](res => {
                           set(res.data || {})
                         })
                       })
@@ -55,7 +69,7 @@ module.exports = {
       .join("\n");
     return {
       prepend: imports,
-      content: operations,
+      content: ops,
     };
   },
   validate: (schema, documents, config, outputFile, allPlugins) => {
