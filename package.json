@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@graphql-codegen/plugin-helpers": "^1.17.0",
+    "@graphql-codegen/visitor-plugin-common": "^1.17.15",
     "camel-case": "^4.1.1",
     "graphql": "^15.3.0",
     "pascal-case": "^3.1.1"
