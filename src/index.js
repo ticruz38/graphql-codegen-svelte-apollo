@@ -11,6 +11,11 @@ var camel_case_1 = require("camel-case");
 var graphql_1 = require("graphql");
 var pascal_case_1 = require("pascal-case");
 var visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
+var operationMap = {
+    query: "query",
+    subscription: "subscribe",
+    mutation: "mutate"
+};
 module.exports = {
     plugin: function (schema, documents, config, info) {
         var allAst = graphql_1.concatAST(documents.map(function (d) { return d.document; }));
@@ -23,8 +28,8 @@ module.exports = {
         var visitor = new visitorPluginCommon.ClientSideBaseVisitor(schema, allFragments, {}, { documentVariableSuffix: "Doc" }, documents);
         var visitorResult = graphql_1.visit(allAst, { leave: visitor });
         var operations = allAst.definitions.filter(function (d) { return d.kind === graphql_1.Kind.OPERATION_DEFINITION; });
-        var operationImport = ("" + (operations.some(function (op) { return op.operation == "query"; }) ? "query, " : "") + (operations.some(function (op) { return op.operation == "mutation"; }) ? "mutation, " : "") + (operations.some(function (op) { return op.operation == "subscription"; })
-            ? "subscription, "
+        var operationImport = ("" + (operations.some(function (op) { return op.operation == "query"; }) ? "query, " : "") + (operations.some(function (op) { return op.operation == "mutation"; }) ? "mutate, " : "") + (operations.some(function (op) { return op.operation == "subscription"; })
+            ? "subscribe, "
             : "")).slice(0, -2);
         var imports = [
             config.clientPath
@@ -42,7 +47,7 @@ module.exports = {
             var op = "" + o.name.value + pascal_case_1.pascalCase(o.operation);
             var opv = op + "Variables";
             // const doc = `const ${o.name.value}Doc = ${o}`
-            var operation = "export const " + o.name.value + " = (" + (config.clientPath ? "" : "client: ApolloClient, ") + "variables: " + opv + ") =>\n  " + o.operation + "<" + op + ", any, " + opv + ">(client, {\n    " + o.operation + ": " + o.name.value + "Doc,\n    variables\n  })";
+            var operation = "export const " + o.name.value + " = (" + (config.clientPath ? "" : "client: ApolloClient, ") + "variables: " + opv + ") =>\n  " + operationMap[o.operation] + "<" + op + ", any, " + opv + ">(client, {\n    " + o.operation + ": " + o.name.value + "Doc,\n    variables\n  })";
             var statelessOperation = "";
             if (config.clientPath &&
                 !o.variableDefinitions.length &&

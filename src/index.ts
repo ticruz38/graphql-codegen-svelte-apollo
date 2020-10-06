@@ -12,6 +12,12 @@ import { pascalCase } from "pascal-case";
 
 const visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
 
+const operationMap = {
+  query: "query",
+  subscription: "subscribe",
+  mutation: "mutate",
+};
+
 module.exports = {
   plugin: (schema, documents, config, info) => {
     const allAst = concatAST(documents.map((d) => d.document));
@@ -43,11 +49,9 @@ module.exports = {
 
     const operationImport = `${
       operations.some((op) => op.operation == "query") ? "query, " : ""
-    }${
-      operations.some((op) => op.operation == "mutation") ? "mutation, " : ""
-    }${
+    }${operations.some((op) => op.operation == "mutation") ? "mutate, " : ""}${
       operations.some((op) => op.operation == "subscription")
-        ? "subscription, "
+        ? "subscribe, "
         : ""
     }`.slice(0, -2);
 
@@ -73,7 +77,7 @@ module.exports = {
         const operation = `export const ${o.name.value} = (${
           config.clientPath ? "" : "client: ApolloClient, "
         }variables: ${opv}) =>
-  ${o.operation}<${op}, any, ${opv}>(client, {
+  ${operationMap[o.operation]}<${op}, any, ${opv}>(client, {
     ${o.operation}: ${o.name.value}Doc,
     variables
   })`;
