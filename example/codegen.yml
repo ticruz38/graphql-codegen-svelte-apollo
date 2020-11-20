@@ -1,0 +1,13 @@
+schema:
+  - https://api.spacex.land/graphql/
+overwrite: true
+documents:
+  - "./src/**/*.gql"
+generates:
+  codegen.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - graphql-codegen-svelte-apollo
+    config:
+      clientPath: "src/apollo-client"

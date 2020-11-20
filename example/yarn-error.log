@@ -1,0 +1,63 @@
+Arguments: 
+  /Users/thibautduchene/.nvm/versions/node/v12.16.3/bin/node /Users/thibautduchene/.nvm/versions/node/v12.16.3/bin/yarn types
+
+PATH: 
+  /usr/local/opt/icu4c/sbin:/usr/local/opt/icu4c/bin:/Users/thibautduchene/.pub-cache/bin:/Users/thibautduchene/flutter/bin:/usr/local/sbin:/Users/duchenethibaut/istio-1.2.2/bin:/Users/thibautduchene/.yarn/bin:/Users/thibautduchene/.config/yarn/global/node_modules/.bin:/Users/thibautduchene/Library/Python/3.8/bin:/Users/thibautduchene/.nvm/versions/node/v12.16.3/bin:/Users/thibautduchene/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/munki:/Library/Apple/usr/bin:/usr/local/opt/icu4c/sbin:/usr/local/opt/icu4c/bin:/Users/thibautduchene/.pub-cache/bin:/Users/thibautduchene/flutter/bin:/usr/local/sbin:/Users/duchenethibaut/istio-1.2.2/bin:/Users/thibautduchene/.yarn/bin:/Users/thibautduchene/.config/yarn/global/node_modules/.bin:/Users/thibautduchene/Library/Python/3.8/bin:/Users/thibautduchene/.nvm/versions/node/v12.16.3/bin:/Users/thibautduchene/.cargo/bin:/Users/thibautduchene/go/bin:/usr/local/opt/go/libexec/bin:/Users/thibautduchene/go/bin:/usr/local/opt/go/libexec/bin
+
+Yarn version: 
+  1.22.4
+
+Node version: 
+  12.16.3
+
+Platform: 
+  darwin x64
+
+Trace: 
+  SyntaxError: /Users/thibautduchene/Code/graphql-codegen-svelte-apollo/package.json: Unexpected token } in JSON at position 347
+      at JSON.parse (<anonymous>)
+      at /Users/thibautduchene/.nvm/versions/node/v12.16.3/lib/node_modules/yarn/lib/cli.js:1625:59
+      at Generator.next (<anonymous>)
+      at step (/Users/thibautduchene/.nvm/versions/node/v12.16.3/lib/node_modules/yarn/lib/cli.js:310:30)
+      at /Users/thibautduchene/.nvm/versions/node/v12.16.3/lib/node_modules/yarn/lib/cli.js:321:13
+
+npm manifest: 
+  {
+    "name": "svelte-app",
+    "version": "1.0.0",
+    "scripts": {
+      "build": "rollup -c",
+      "dev": "rollup -c -w",
+      "start": "sirv public",
+      "validate": "svelte-check"
+    },
+    "devDependencies": {
+      "@graphql-codegen/cli": "^1.19.2",
+      "@graphql-codegen/typescript": "^1.17.11",
+      "@graphql-codegen/typescript-operations": "^1.17.10",
+      "@rollup/plugin-commonjs": "^14.0.0",
+      "@rollup/plugin-node-resolve": "^8.0.0",
+      "@rollup/plugin-typescript": "^6.0.0",
+      "@tsconfig/svelte": "^1.0.0",
+      "graphql-codegen-svelte-apollo": "0.0.8",
+      "rollup": "^2.3.4",
+      "rollup-plugin-livereload": "^2.0.0",
+      "rollup-plugin-svelte": "^6.0.0",
+      "rollup-plugin-terser": "^7.0.0",
+      "svelte": "^3.0.0",
+      "svelte-check": "^1.0.0",
+      "svelte-preprocess": "^4.0.0",
+      "tslib": "^2.0.0",
+      "typescript": "^3.9.3"
+    },
+    "dependencies": {
+      "graphql": "^15.4.0",
+      "sirv-cli": "^1.0.0"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
