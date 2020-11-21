@@ -4,7 +4,7 @@ overwrite: true
 documents:
   - "./src/**/*.gql"
 generates:
-  codegen.ts:
+  src/codegen.ts:
     plugins:
       - typescript
       - typescript-operations
