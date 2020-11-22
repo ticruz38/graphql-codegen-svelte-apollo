@@ -1,11 +1,9 @@
 <script lang="ts">
-  import {
-    getLaunches,
-    GetLaunchesWithArgs,
-    GetLaunchesWithArgsQuery,
-  } from "../codegen";
+  import { getLaunches, GetLaunchesWithArgs } from "src/codegen";
+  import type { GetLaunchesWithArgsQuery } from "src/codegen";
 
   let limit = 10;
+  let loading = true;
 
   let launchWithArgs: GetLaunchesWithArgsQuery = { launches: [] };
 
@@ -13,25 +11,41 @@
 
   $: (async () => {
     try {
+      loading = true;
       let result = await $q;
       launchWithArgs = result.data;
+      loading = false;
     } catch (e) {
+      loading = false;
       console.log("Error fetching last launches: ", e);
     }
   })();
 </script>
 
+<style>
+  .flex {
+    display: flex;
+  }
+</style>
+
 <button on:click={(_) => (limit = 10)}>Last 10 launches</button>
 <button on:click={(_) => (limit = 20)}>Last 20 launches</button>
 
-<main>
-  <h1>SpaceX launches</h1>
-  {#each $getLaunches.launches as launch}
-    <div>{launch.mission_id}</div>
-    <div>{launch.mission_name}</div>
-  {/each}
-  {#each launchWithArgs.launches as launch}
-    <div>{launch.mission_id}</div>
-    <div>{launch.mission_name}</div>
-  {/each}
+{#if loading}Loading...{/if}
+
+<main class="flex">
+  <div>
+    <h1>SpaceX launches</h1>
+    {#each $getLaunches.launches || [] as launch}
+      <div>{launch.mission_id}</div>
+      <div>{launch.mission_name}</div>
+    {/each}
+  </div>
+  <div>
+    <h1>SpaceX last {limit} launches</h1>
+    {#each launchWithArgs.launches || [] as launch}
+      <div>{launch.mission_id}</div>
+      <div>{launch.mission_name}</div>
+    {/each}
+  </div>
 </main>

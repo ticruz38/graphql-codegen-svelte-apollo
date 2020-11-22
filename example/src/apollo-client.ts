@@ -8,7 +8,6 @@ const cache = new InMemoryCache({
 
 const link = new BatchHttpLink({
   uri: "https://api.spacex.land/graphql/",
-  credentials: "include",
   batchInterval: 20,
 });
 
