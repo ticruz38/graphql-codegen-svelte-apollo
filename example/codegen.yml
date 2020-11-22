@@ -8,6 +8,6 @@ generates:
     plugins:
       - typescript
       - typescript-operations
-      - graphql-codegen-svelte-apollo
+      - ../src/index.js
     config:
       clientPath: "src/apollo-client"

@@ -19,6 +19,8 @@ Note: typescript and typescript-operations plugins are required.
 
 ## Example config
 
+Look at the example folder for a full example.
+
 ```
 overwrite: true
 schema:
