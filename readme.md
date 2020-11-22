@@ -2,6 +2,10 @@
 
 GraphQL Code Generator plugin to generate ts-ready svelte-apollo queries from graphql.
 
+This package is not compatible with the last svelte-apollo version yet.
+Indeed the version 0.4.0 make it difficult to adapt this package to Sapper, there is no problem whatsoever to use svelte-apollo@0.3.0, this will not impact your performance, and your component code will remain the same.
+Compatibility problem is tracked in this [thread](https://github.com/ticruz38/graphql-codegen-svelte-apollo/issues/2)
+
 ## Motivation
 
 Apollo and graphql-code-generator are a powerfull combination for data management in the front-end.
