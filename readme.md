@@ -1,6 +1,6 @@
-# Graphql generator for svelte-apollo
+# Svelte GraphQL generator for Apollo
 
-GraphQL Code Generator to use Apollo in Svelte with full Typescript support.
+GraphQL Code Generator plugin to use Apollo in Svelte with full Typescript support.
 
 ## Motivation
 
@@ -20,7 +20,7 @@ Note: typescript and typescript-operations plugins are required.
 
 ## Example config
 
-```
+```yml
 overwrite: true
 schema:
     - 'https://myschema/graphql'
