@@ -7,7 +7,6 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 exports.__esModule = true;
-var camel_case_1 = require("camel-case");
 var graphql_1 = require("graphql");
 var pascal_case_1 = require("pascal-case");
 var visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
@@ -28,15 +27,19 @@ module.exports = {
         var visitor = new visitorPluginCommon.ClientSideBaseVisitor(schema, allFragments, {}, { documentVariableSuffix: "Doc" }, documents);
         var visitorResult = graphql_1.visit(allAst, { leave: visitor });
         var operations = allAst.definitions.filter(function (d) { return d.kind === graphql_1.Kind.OPERATION_DEFINITION; });
-        var operationImport = ("" + (operations.some(function (op) { return op.operation == "query"; }) ? "query, " : "") + (operations.some(function (op) { return op.operation == "mutation"; }) ? "mutate, " : "") + (operations.some(function (op) { return op.operation == "subscription"; })
-            ? "subscribe, "
+        var operationImport = ("" + (operations.some(function (op) { return op.operation == "query"; })
+            ? "ApolloQueryResult, ObservableQuery, QueryOptions, "
+            : "") + (operations.some(function (op) { return op.operation == "mutation"; })
+            ? "MutationOptions, "
+            : "") + (operations.some(function (op) { return op.operation == "subscription"; })
+            ? "SubscriptionOptions, "
             : "")).slice(0, -2);
         var imports = [
-            config.clientPath
-                ? "import client from \"" + config.clientPath + "\";"
-                : "import { ApolloClient } from \"apollo-client\";",
-            "import { " + operationImport + " } from \"svelte-apollo\";",
+            "import client from \"" + config.clientPath + "\";",
+            "import type {\n        " + operationImport + "\n      } from \"@apollo/client\";",
+            "import { ApolloClient } from \"apollo-client\";",
             "import { writable } from \"svelte/store\";",
+            "import type { Writable } from \"svelte/store\";",
             "import gql from \"graphql-tag\"",
         ];
         var ops = operations
@@ -46,15 +49,17 @@ module.exports = {
             }).rawSDL + "`";
             var op = "" + o.name.value + pascal_case_1.pascalCase(o.operation);
             var opv = op + "Variables";
-            // const doc = `const ${o.name.value}Doc = ${o}`
-            var operation = "export const " + o.name.value + " = (" + (config.clientPath ? "" : "client: ApolloClient, ") + "variables: " + opv + ") =>\n  " + operationMap[o.operation] + "<" + op + ", any, " + opv + ">(client, {\n    " + o.operation + ": " + o.name.value + "Doc,\n    variables\n  })";
-            var statelessOperation = "";
-            if (config.clientPath &&
-                !o.variableDefinitions.length &&
-                o.operation != "mutation") {
-                statelessOperation = "export const " + camel_case_1.camelCase(o.name.value) + " = writable<" + op + ">({}, (set) => {\n                      const p = " + o.name.value + "({})\n                      p.subscribe((v) => {\n                        v[\"then\"](res => {\n                          set(res.data || {})\n                        })\n                      })\n                    })";
+            var operation;
+            if (o.operation == "query") {
+                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              QueryOptions<" + opv + ">, \n              \"query\"\n            >\n          ): Writable<\n            ApolloQueryResult<" + op + "> & {\n              query: ObservableQuery<\n                " + op + ",\n                " + opv + "\n              >;\n            }\n          > => {\n            const q = client.watchQuery({\n              query: " + o.name.value + "Doc,\n              ...options,\n            });\n            var result = writable<\n              ApolloQueryResult<" + op + "> & {\n                query: ObservableQuery<\n                  " + op + ",\n                  " + opv + "\n                >;\n              }\n            >(\n              { data: null, loading: true, error: null, networkStatus: 1, query: null },\n              (set) => {\n                q.subscribe((v) => {\n                  set({ ...v, query: q });\n                });\n              }\n            );\n            return result;\n          }\n        ";
             }
-            return operation + "\n" + statelessOperation;
+            if (o.operation == "mutation") {
+                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              MutationOptions<any, " + opv + ">, \n              \"mutation\"\n            >\n          ) => {\n            const m = client.mutate<" + op + ", " + opv + ">({\n              mutation: " + o.name.value + "Doc,\n              ...options,\n            });\n            return m;\n          }";
+            }
+            if (o.operation == "subscription") {
+                operation = "export const " + o.name.value + " = (\n            options: Omit<SubscriptionOptions<" + opv + ">, \"query\">\n          ) => {\n            const q = client.subscribe<" + op + ", " + opv + ">(\n              {\n                query: " + o.name.value + "Doc,\n                ...options,\n              }\n            )\n            return q;\n          }";
+            }
+            return operation;
         })
             .join("\n");
         return {

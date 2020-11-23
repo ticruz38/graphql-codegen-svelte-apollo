@@ -48,19 +48,27 @@ module.exports = {
     ) as OperationDefinitionNode[];
 
     const operationImport = `${
-      operations.some((op) => op.operation == "query") ? "query, " : ""
-    }${operations.some((op) => op.operation == "mutation") ? "mutate, " : ""}${
+      operations.some((op) => op.operation == "query")
+        ? "ApolloQueryResult, ObservableQuery, QueryOptions, "
+        : ""
+    }${
+      operations.some((op) => op.operation == "mutation")
+        ? "MutationOptions, "
+        : ""
+    }${
       operations.some((op) => op.operation == "subscription")
-        ? "subscribe, "
+        ? "SubscriptionOptions, "
         : ""
     }`.slice(0, -2);
 
     const imports = [
-      config.clientPath
-        ? `import client from "${config.clientPath}";`
-        : `import { ApolloClient } from "apollo-client";`,
-      `import { ${operationImport} } from "svelte-apollo";`,
+      `import client from "${config.clientPath}";`,
+      `import type {
+        ${operationImport}
+      } from "@apollo/client";`,
+      `import { ApolloClient } from "apollo-client";`,
       `import { writable } from "svelte/store";`,
+      `import type { Writable } from "svelte/store";`,
       `import gql from "graphql-tag"`,
     ];
 
@@ -73,32 +81,72 @@ module.exports = {
         }\``;
         const op = `${o.name.value}${pascalCase(o.operation)}`;
         const opv = `${op}Variables`;
-        // const doc = `const ${o.name.value}Doc = ${o}`
-        const operation = `export const ${o.name.value} = (${
-          config.clientPath ? "" : "client: ApolloClient, "
-        }variables: ${opv}) =>
-  ${operationMap[o.operation]}<${op}, any, ${opv}>(client, {
-    ${o.operation}: ${o.name.value}Doc,
-    variables
-  })`;
-        let statelessOperation = "";
-        if (
-          config.clientPath &&
-          !o.variableDefinitions.length &&
-          o.operation != "mutation"
-        ) {
-          statelessOperation = `export const ${camelCase(
-            o.name.value
-          )} = writable<${op}>({}, (set) => {
-                      const p = ${o.name.value}({})
-                      p.subscribe((v) => {
-                        v["then"](res => {
-                          set(res.data || {})
-                        })
-                      })
-                    })`;
+        let operation;
+        if (o.operation == "query") {
+          operation = `export const ${o.name.value} = (
+            options: Omit<
+              QueryOptions<${opv}>, 
+              "query"
+            >
+          ): Writable<
+            ApolloQueryResult<${op}> & {
+              query: ObservableQuery<
+                ${op},
+                ${opv}
+              >;
+            }
+          > => {
+            const q = client.watchQuery({
+              query: ${o.name.value}Doc,
+              ...options,
+            });
+            var result = writable<
+              ApolloQueryResult<${op}> & {
+                query: ObservableQuery<
+                  ${op},
+                  ${opv}
+                >;
+              }
+            >(
+              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              (set) => {
+                q.subscribe((v) => {
+                  set({ ...v, query: q });
+                });
+              }
+            );
+            return result;
+          }
+        `;
         }
-        return operation + "\n" + statelessOperation;
+        if (o.operation == "mutation") {
+          operation = `export const ${o.name.value} = (
+            options: Omit<
+              MutationOptions<any, ${opv}>, 
+              "mutation"
+            >
+          ) => {
+            const m = client.mutate<${op}, ${opv}>({
+              mutation: ${o.name.value}Doc,
+              ...options,
+            });
+            return m;
+          }`;
+        }
+        if (o.operation == "subscription") {
+          operation = `export const ${o.name.value} = (
+            options: Omit<SubscriptionOptions<${opv}>, "query">
+          ) => {
+            const q = client.subscribe<${op}, ${opv}>(
+              {
+                query: ${o.name.value}Doc,
+                ...options,
+              }
+            )
+            return q;
+          }`;
+        }
+        return operation;
       })
       .join("\n");
     return {
