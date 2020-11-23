@@ -1,15 +1,12 @@
 # Graphql generator for svelte-apollo
 
-GraphQL Code Generator plugin to generate ts-ready svelte-apollo queries from graphql.
-
-This package is not compatible with the last svelte-apollo version yet.
-Indeed the version 0.4.0 make it difficult to adapt this package to Sapper, there is no problem whatsoever to use svelte-apollo@0.3.0, this will not impact your performance, and your component code will remain the same.
-Compatibility problem is tracked in this [thread](https://github.com/ticruz38/graphql-codegen-svelte-apollo/issues/2)
+GraphQL Code Generator to use Apollo in Svelte with full Typescript support.
 
 ## Motivation
 
-Apollo and graphql-code-generator are a powerfull combination for data management in the front-end.
-Svelte-apollo is a fantastic wrapper around the apollo-client, but unlike other big frameworks, svelte was still missing a graphql-code-generator plugin for client queries.
+[Apollo](https://www.apollographql.com) and [graphql-code-generator](https://graphql-code-generator.com) are a powerfull combination for data management in the front-end.
+Unlike other big frameworks, Svelte was still missing a graphql-code-generator plugin for client queries.
+It turns out that Svelte with its reactive programming, is particularly well designed to be used together with Apollo
 
 ## Install
 
@@ -47,33 +44,30 @@ hooks:
 
 Take for example this query that will request all transactions for one ethereum address
 
-```
-const TRANSACTION_FRAGMENT = gql`
-    fragment TransactionFragment on TransactionDescription {
-        contractAddress
-        from
-        gasUsed
-        gasPrice
-        input
-        isError
-        to
-        value
-    }
-`;
+```graphql
+# app.gql
 
-const TRANSACTIONS = gql`
-    ${TRANSACTION_FRAGMENT}
-    query Transactions($address: String) {
-        transactions(address: $address) {
-            ...TransactionFragment
-        }
+fragment TransactionFragment on TransactionDescription {
+    contractAddress
+    from
+    gasUsed
+    gasPrice
+    input
+    isError
+    to
+    value
+}
+
+query Transactions($address: String) {
+    transactions(address: $address) {
+        ...TransactionFragment
     }
-`;
+}
 ```
 
 graphql-code-generator will generate:
 
-```
+```ts
 export const TransactionsDoc = gql`
     fragment TransactionFragment on TransactionDescription {
         contractAddress
@@ -93,80 +87,48 @@ export const TransactionsDoc = gql`
     }
 `;
 
-export const Transactions = (variables: TransactionsQueryVariables) =>
-    query<TransactionsQuery, any, TransactionsTransactionsQueryVariables>(
-        client,
-        {
-            Transactions: TransactionsDoc,
-            variables,
-        }
-    );
+export const Transactions = (
+  options: Omit<QueryOptions<TransactionsQueryVariables>, "query">
+): Writable<
+  ApolloQueryResult<TransactionsQuery> & {
+    query: ObservableQuery<TransactionsQuery, TransactionsQueryVariables>;
+  }
+> => {
+  const q = client.watchQuery({
+    query: TransactionsDoc,
+    ...options,
+  });
+  var result = writable<
+    ApolloQueryResult<TransactionsQuery> & {
+      query: ObservableQuery<TransactionsQuery, TransactionsQueryVariables>;
+    }
+  >(
+    { data: null, loading: true, error: null, networkStatus: 1, query: null },
+    (set) => {
+      q.subscribe((v) => {
+        set({ ...v, query: q });
+      });
+    }
+  );
+  return result;
+};
+
 ```
 
 And use it as follow in your svelte file:
 
-```
+```html
 <script lang="ts">
   var address = "0x0000000000000000000000000000"
   $: t = Transactions({ address });
 </script>
 
-{#await $t then res}
-  {#each res.data.transactions as transaction}
+<ul>
+{#each t?.data?.transactions || [] as transaction}
     <li>Sent transaction from {transaction.from} to {transaction.to}</li>
-  {/each}
-{/await}
+{/each}
+</ul>
 ```
 
-## Stateless queries
+For a complete example implementation refer to the [example](https://github.com/ticruz38/graphql-codegen-svelte-apollo/tree/main/example) folder
 
-If the query is stateless (has no variables), the plugin will generate both the queries and the query result as observable.
-
-Example, take a query "CurrentUser" that return the current logged in user:
-
-```
-query CurrentUser {
-  me {
-    username
-  }
-}
-```
-
-graphql-code-generator will generate:
-
-```
-export const CurrentUserDoc = gql`
-    query CurrentUser {
-        me {
-          username
-        }
-    }
-`;
-
-export const CurrentUser = (variables: CurrentUserQueryVariables) =>
-    query<CurrentUserQuery, any, CurrentUserCurrentUserQueryVariables>(client, {
-        CurrentUser: CurrentUserDoc,
-        variables,
-    });
-
-export const currentUser = writable<CurrentUserQuery>({}, (set) => {
-    const p = CurrentUser({});
-    p.subscribe((v) => {
-        v.then((res) => {
-            set(res.data || {});
-        });
-    });
-});
-```
-
-We have the svelte-apollo query CurrentUser, and the observable result currentUser.
-
-Now in your svelte file, you can simply do this:
-
-```
-<script lang="ts">
-  import { currentUser } from "codegen"
-</script>
-
-<div>Hello {$currentUser.username} !!</div>
-```
