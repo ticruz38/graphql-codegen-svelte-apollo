@@ -1,6 +1,10 @@
 import client from "src/apollo-client";
-import { query } from "svelte-apollo";
+import type {
+        ApolloQueryResult, ObservableQuery, QueryOptions, MutationOptions, SubscriptionOptions
+      } from "@apollo/client";
+import { ApolloClient } from "apollo-client";
 import { writable } from "svelte/store";
+import type { Writable } from "svelte/store";
 import gql from "graphql-tag"
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -1346,6 +1350,35 @@ export type GetLaunchesWithArgsQuery = (
   )>>> }
 );
 
+export type UpdateUserMutationVariables = Exact<{
+  user?: Maybe<Users_Set_Input>;
+  where: Users_Bool_Exp;
+}>;
+
+
+export type UpdateUserMutation = (
+  { __typename?: 'Mutation' }
+  & { update_users?: Maybe<(
+    { __typename?: 'users_mutation_response' }
+    & Pick<Users_Mutation_Response, 'affected_rows'>
+    & { returning: Array<(
+      { __typename?: 'users' }
+      & Pick<Users, 'id' | 'name'>
+    )> }
+  )> }
+);
+
+export type NewUserSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type NewUserSubscription = (
+  { __typename?: 'Subscription' }
+  & { users: Array<(
+    { __typename?: 'users' }
+    & Pick<Users, 'id' | 'name' | 'rocket'>
+  )> }
+);
+
 
 export const GetLaunchesDoc = gql`
     query GetLaunches {
@@ -1363,21 +1396,116 @@ export const GetLaunchesWithArgsDoc = gql`
   }
 }
     `;
-export const GetLaunches = (variables: GetLaunchesQueryVariables) =>
-  query<GetLaunchesQuery, any, GetLaunchesQueryVariables>(client, {
-    query: GetLaunchesDoc,
-    variables
-  })
-export const getLaunches = writable<GetLaunchesQuery>({}, (set) => {
-                      const p = GetLaunches({})
-                      p.subscribe((v) => {
-                        v["then"](res => {
-                          set(res.data || {})
-                        })
-                      })
-                    })
-export const GetLaunchesWithArgs = (variables: GetLaunchesWithArgsQueryVariables) =>
-  query<GetLaunchesWithArgsQuery, any, GetLaunchesWithArgsQueryVariables>(client, {
-    query: GetLaunchesWithArgsDoc,
-    variables
-  })
+export const UpdateUserDoc = gql`
+    mutation UpdateUser($user: users_set_input, $where: users_bool_exp!) {
+  update_users(_set: $user, where: $where) {
+    affected_rows
+    returning {
+      id
+      name
+    }
+  }
+}
+    `;
+export const NewUserDoc = gql`
+    subscription NewUser {
+  users {
+    id
+    name
+    rocket
+  }
+}
+    `;
+export const GetLaunches = (
+            options: Omit<
+              QueryOptions<GetLaunchesQueryVariables>, 
+              "query"
+            >
+          ): Writable<
+            ApolloQueryResult<GetLaunchesQuery> & {
+              query: ObservableQuery<
+                GetLaunchesQuery,
+                GetLaunchesQueryVariables
+              >;
+            }
+          > => {
+            const q = client.watchQuery({
+              query: GetLaunchesDoc,
+              ...options,
+            });
+            var result = writable<
+              ApolloQueryResult<GetLaunchesQuery> & {
+                query: ObservableQuery<
+                  GetLaunchesQuery,
+                  GetLaunchesQueryVariables
+                >;
+              }
+            >(
+              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              (set) => {
+                q.subscribe((v) => {
+                  set({ ...v, query: q });
+                });
+              }
+            );
+            return result;
+          }
+        
+export const GetLaunchesWithArgs = (
+            options: Omit<
+              QueryOptions<GetLaunchesWithArgsQueryVariables>, 
+              "query"
+            >
+          ): Writable<
+            ApolloQueryResult<GetLaunchesWithArgsQuery> & {
+              query: ObservableQuery<
+                GetLaunchesWithArgsQuery,
+                GetLaunchesWithArgsQueryVariables
+              >;
+            }
+          > => {
+            const q = client.watchQuery({
+              query: GetLaunchesWithArgsDoc,
+              ...options,
+            });
+            var result = writable<
+              ApolloQueryResult<GetLaunchesWithArgsQuery> & {
+                query: ObservableQuery<
+                  GetLaunchesWithArgsQuery,
+                  GetLaunchesWithArgsQueryVariables
+                >;
+              }
+            >(
+              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              (set) => {
+                q.subscribe((v) => {
+                  set({ ...v, query: q });
+                });
+              }
+            );
+            return result;
+          }
+        
+export const UpdateUser = (
+            options: Omit<
+              MutationOptions<any, UpdateUserMutationVariables>, 
+              "mutation"
+            >
+          ) => {
+            const m = client.mutate<UpdateUserMutation, UpdateUserMutationVariables>({
+              mutation: UpdateUserDoc,
+              ...options,
+            });
+            return m;
+          }
+export const NewUser = (
+            options: Omit<SubscriptionOptions<NewUserSubscriptionVariables>, "query">
+          ) => {
+            const q = client.subscribe<NewUserSubscription, NewUserSubscriptionVariables>(
+              {
+                query: NewUserDoc,
+                ...options,
+              }
+            )
+            return q;
+          }

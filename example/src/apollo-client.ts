@@ -1,15 +1,37 @@
-import { BatchHttpLink } from "apollo-link-batch-http";
-import { InMemoryCache } from "apollo-cache-inmemory";
-import { ApolloClient } from "apollo-client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ApolloLink,
+} from "@apollo/client";
+import { WebSocketLink } from "@apollo/client/link/ws";
+import { getOperationAST } from "graphql";
 
 const cache = new InMemoryCache({
   addTypename: true,
 });
 
-const link = new BatchHttpLink({
-  uri: "https://api.spacex.land/graphql/",
-  batchInterval: 20,
+const wsLink = new WebSocketLink({
+  uri: "wss://api.spacex.land/graphql/",
+  options: {
+    lazy: true,
+    reconnect: true,
+  },
 });
+
+const httpLink = new HttpLink({
+  uri: "https://api.spacex.land/graphql/",
+});
+
+const link = ApolloLink.split(
+  (op: any) => {
+    // check if it is a subscription
+    const operationAST = getOperationAST(op.query, op.operationName);
+    return !!operationAST && operationAST.operation === "subscription";
+  },
+  wsLink,
+  httpLink
+);
 
 export default new ApolloClient({
   cache,
