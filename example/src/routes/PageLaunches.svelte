@@ -4,7 +4,7 @@
   import CLaunch from '../components/CLaunch.svelte';
   import { Wave } from 'svelte-loading-spinners';
 
-  $: launches = GetLaunches({});
+  $: query = GetLaunches({});
 </script>
 
 <style>
@@ -24,10 +24,10 @@
 <main class="cards">
   <div class="card">
     <h2>SpaceX all launches</h2>
-    {#if $launches.loading}
+    {#if $query.loading}
       <Wave size="100" color="#FF3E00" unit="px" />
     {/if}
-    {#each $launches.data?.launches || [] as launch (launch.mission_id)}
+    {#each $query.data?.launches || [] as launch (launch.mission_id)}
       <div transition:fade>
         <CLaunch {launch} />
       </div>

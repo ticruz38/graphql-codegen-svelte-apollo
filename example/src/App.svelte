@@ -2,6 +2,7 @@
   import { Router, Link, Route } from 'svelte-routing';
   import PageLaunches from './routes/PageLaunches.svelte';
   import PageLaunchesWithArgs from './routes/PageLaunchesWithArgs.svelte';
+  import PageUsers from './routes/PageUsers.svelte';
   import NavLink from './components/NavLink.svelte';
 
   export let url = '';
@@ -32,11 +33,13 @@
 
 <Router {url}>
   <nav>
-    <NavLink to="/">Launches</NavLink>
-    <NavLink to="withArgs">Launches (withArgs)</NavLink>
+    <NavLink to="/">Query</NavLink>
+    <NavLink to="withArgs">Query (withArgs)</NavLink>
+    <NavLink to="mutation">Mutation</NavLink>
   </nav>
   <div>
-    <Route path="withArgs" component={PageLaunchesWithArgs} />
     <Route path="/" component={PageLaunches} />
+    <Route path="/withArgs" component={PageLaunchesWithArgs} />
+    <Route path="/mutation" component={PageUsers} />
   </div>
 </Router>

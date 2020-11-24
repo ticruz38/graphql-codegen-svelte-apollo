@@ -3,7 +3,7 @@
   import CLaunch from '../components/CLaunch.svelte';
 
   let limit = 10;
-  $: launches = GetLaunchesWithArgs({ variables: { limit } });
+  $: query = GetLaunchesWithArgs({ variables: { limit } });
 </script>
 
 <style>
@@ -49,19 +49,19 @@
 <main class="cards">
   <div class="card">
     <h2>SpaceX last {limit} launches (1)</h2>
-    {#if $launches.loading}
+    {#if $query.loading}
       <p>...loading {limit} launches</p>
     {/if}
-    {#each $launches.data?.launches || [] as launch (launch.mission_id)}
+    {#each $query.data?.launches || [] as launch (launch.mission_id)}
       <CLaunch {launch} />
     {/each}
   </div>
   <div class="card">
     <h2>SpaceX last {limit} launches (2)</h2>
-    {#if $launches.loading}
+    {#if $query.loading}
       <p>...loading {limit} launches</p>
     {/if}
-    {#each $launches.data?.launches || [] as launch}
+    {#each $query.data?.launches || [] as launch}
       <CLaunch {launch} />
     {/each}
   </div>

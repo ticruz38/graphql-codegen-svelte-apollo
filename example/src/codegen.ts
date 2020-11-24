@@ -1,6 +1,6 @@
 import client from "src/apollo-client";
 import type {
-        ApolloQueryResult, ObservableQuery, QueryOptions
+        ApolloQueryResult, ObservableQuery, QueryOptions, MutationOptions
       } from "@apollo/client";
 import { ApolloClient } from "apollo-client";
 import { writable } from "svelte/store";
@@ -1326,6 +1326,41 @@ export type CoreMission = {
   flight?: Maybe<Scalars['Int']>;
 };
 
+export type AddCodegenUserMutationVariables = Exact<{
+  userName: Scalars['String'];
+}>;
+
+
+export type AddCodegenUserMutation = (
+  { __typename?: 'Mutation' }
+  & { insert_users?: Maybe<(
+    { __typename?: 'users_mutation_response' }
+    & Pick<Users_Mutation_Response, 'affected_rows'>
+  )> }
+);
+
+export type DeleteCodegenUserMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DeleteCodegenUserMutation = (
+  { __typename?: 'Mutation' }
+  & { delete_users?: Maybe<(
+    { __typename?: 'users_mutation_response' }
+    & Pick<Users_Mutation_Response, 'affected_rows'>
+  )> }
+);
+
+export type GetCodegenUsersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCodegenUsersQuery = (
+  { __typename?: 'Query' }
+  & { users: Array<(
+    { __typename?: 'users' }
+    & Pick<Users, 'name' | 'timestamp'>
+  )> }
+);
+
 export type GetLaunchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1351,6 +1386,28 @@ export type GetLaunchesWithArgsQuery = (
 );
 
 
+export const AddCodegenUserDoc = gql`
+    mutation AddCodegenUser($userName: String!) {
+  insert_users(objects: {name: $userName, rocket: "codegen"}) {
+    affected_rows
+  }
+}
+    `;
+export const DeleteCodegenUserDoc = gql`
+    mutation DeleteCodegenUser {
+  delete_users(where: {rocket: {_eq: "codegen"}}) {
+    affected_rows
+  }
+}
+    `;
+export const GetCodegenUsersDoc = gql`
+    query GetCodegenUsers {
+  users(where: {rocket: {_eq: "codegen"}}) {
+    name
+    timestamp
+  }
+}
+    `;
 export const GetLaunchesDoc = gql`
     query GetLaunches {
   launches {
@@ -1367,6 +1424,65 @@ export const GetLaunchesWithArgsDoc = gql`
   }
 }
     `;
+export const AddCodegenUser = (
+            options: Omit<
+              MutationOptions<any, AddCodegenUserMutationVariables>, 
+              "mutation"
+            >
+          ) => {
+            const m = client.mutate<AddCodegenUserMutation, AddCodegenUserMutationVariables>({
+              mutation: AddCodegenUserDoc,
+              ...options,
+            });
+            return m;
+          }
+export const DeleteCodegenUser = (
+            options: Omit<
+              MutationOptions<any, DeleteCodegenUserMutationVariables>, 
+              "mutation"
+            >
+          ) => {
+            const m = client.mutate<DeleteCodegenUserMutation, DeleteCodegenUserMutationVariables>({
+              mutation: DeleteCodegenUserDoc,
+              ...options,
+            });
+            return m;
+          }
+export const GetCodegenUsers = (
+            options: Omit<
+              QueryOptions<GetCodegenUsersQueryVariables>, 
+              "query"
+            >
+          ): Writable<
+            ApolloQueryResult<GetCodegenUsersQuery> & {
+              query: ObservableQuery<
+                GetCodegenUsersQuery,
+                GetCodegenUsersQueryVariables
+              >;
+            }
+          > => {
+            const q = client.watchQuery({
+              query: GetCodegenUsersDoc,
+              ...options,
+            });
+            var result = writable<
+              ApolloQueryResult<GetCodegenUsersQuery> & {
+                query: ObservableQuery<
+                  GetCodegenUsersQuery,
+                  GetCodegenUsersQueryVariables
+                >;
+              }
+            >(
+              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              (set) => {
+                q.subscribe((v) => {
+                  set({ ...v, query: q });
+                });
+              }
+            );
+            return result;
+          }
+        
 export const GetLaunches = (
             options: Omit<
               QueryOptions<GetLaunchesQueryVariables>, 

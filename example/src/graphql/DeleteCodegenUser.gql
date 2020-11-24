@@ -1,0 +1,5 @@
+mutation DeleteCodegenUser {
+  delete_users(where: { rocket: { _eq: "codegen" } }) {
+    affected_rows
+  }
+}
