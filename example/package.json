@@ -5,7 +5,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "start": "sirv public",
-    "types": "export DEBUG=1 && npx graphql-code-generator",
+    "types": "cross-env DEBUG=1 && graphql-codegen",
     "validate": "svelte-check"
   },
   "devDependencies": {
@@ -16,6 +16,7 @@
     "@rollup/plugin-node-resolve": "^8.0.0",
     "@rollup/plugin-typescript": "^6.0.0",
     "@tsconfig/svelte": "^1.0.0",
+    "cross-env": "^7.0.2",
     "rollup": "^2.3.4",
     "rollup-plugin-livereload": "^2.0.0",
     "rollup-plugin-svelte": "^6.0.0",
@@ -31,6 +32,8 @@
     "apollo-client": "^2.6.10",
     "apollo-link-batch-http": "^1.2.14",
     "sirv-cli": "^1.0.0",
-    "svelte-apollo": "^0.3.0"
+    "svelte-apollo": "^0.3.0",
+    "svelte-loading-spinners": "^0.1.1",
+    "svelte-routing": "^1.4.2"
   }
 }
