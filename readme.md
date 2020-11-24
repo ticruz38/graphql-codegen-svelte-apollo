@@ -124,9 +124,9 @@ And use it as follow in your svelte file:
 </script>
 
 <ul>
-{#each t?.data?.transactions || [] as transaction}
-    <li>Sent transaction from {transaction.from} to {transaction.to}</li>
-{/each}
+    {#each $t?.data?.transactions || [] as transaction}
+        <li>Sent transaction from {transaction.from} to {transaction.to}</li>
+    {/each}
 </ul>
 ```
 
