@@ -1,2 +1,0 @@
-schema: https://api.spacex.land/graphql/
-documents: "src/**/*.gql"

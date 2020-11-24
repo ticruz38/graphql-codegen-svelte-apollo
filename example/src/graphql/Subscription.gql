@@ -1,0 +1,17 @@
+subscription UserAdded {
+  userAdded {
+    id
+    name
+  }
+}
+
+mutation InsertUsersAndPublish($name: String!) {
+  insert_users_and_publish(name: $name, rocket: "codegen") {
+    affected_rows
+    returning {
+      id
+      name
+      rocket
+    }
+  }
+}

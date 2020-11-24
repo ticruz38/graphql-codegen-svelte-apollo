@@ -1,8 +1,9 @@
 <script>
-  import { Router, Link, Route } from 'svelte-routing';
-  import PageLaunches from './routes/PageLaunches.svelte';
-  import PageLaunchesWithArgs from './routes/PageLaunchesWithArgs.svelte';
-  import PageUsers from './routes/PageUsers.svelte';
+  import { Router, Route } from 'svelte-routing';
+  import PageQueries from './routes/PageQueries.svelte';
+  import PageQueriesWithArgs from './routes/PageQueriesWithArgs.svelte';
+  import PageMutation from './routes/PageMutation.svelte';
+  import PageSubscription from './routes/PageSubscription.svelte';
   import NavLink from './components/NavLink.svelte';
 
   export let url = '';
@@ -36,10 +37,20 @@
     <NavLink to="/">Query</NavLink>
     <NavLink to="withArgs">Query (withArgs)</NavLink>
     <NavLink to="mutation">Mutation</NavLink>
+    <NavLink to="subscription">Subscription</NavLink>
   </nav>
   <div>
-    <Route path="/" component={PageLaunches} />
-    <Route path="/withArgs" component={PageLaunchesWithArgs} />
-    <Route path="/mutation" component={PageUsers} />
+    <Route path="">
+      <PageQueries />
+    </Route>
+    <Route path="withArgs">
+      <PageQueriesWithArgs />
+    </Route>
+    <Route path="mutation">
+      <PageMutation />
+    </Route>
+    <Route path="subscription">
+      <PageSubscription />
+    </Route>
   </div>
 </Router>

@@ -1,6 +1,6 @@
 import client from "src/apollo-client";
 import type {
-        ApolloQueryResult, ObservableQuery, QueryOptions, MutationOptions
+        ApolloQueryResult, ObservableQuery, QueryOptions, MutationOptions, SubscriptionOptions
       } from "@apollo/client";
 import { ApolloClient } from "apollo-client";
 import { writable } from "svelte/store";
@@ -1171,6 +1171,7 @@ export type Mutation = {
   insert_users?: Maybe<Users_Mutation_Response>;
   /** update data of the table: "users" */
   update_users?: Maybe<Users_Mutation_Response>;
+  insert_users_and_publish?: Maybe<Users_Mutation_Response>;
 };
 
 
@@ -1188,6 +1189,13 @@ export type MutationInsert_UsersArgs = {
 export type MutationUpdate_UsersArgs = {
   _set?: Maybe<Users_Set_Input>;
   where: Users_Bool_Exp;
+};
+
+
+export type MutationInsert_Users_And_PublishArgs = {
+  name: Scalars['String'];
+  rocket?: Maybe<Scalars['String']>;
+  twitter?: Maybe<Scalars['String']>;
 };
 
 /** response of any mutation on the table "users" */
@@ -1251,6 +1259,7 @@ export type Subscription = {
   users_aggregate: Users_Aggregate;
   /** fetch data from the table: "users" using primary key columns */
   users_by_pk?: Maybe<Users>;
+  userAdded?: Maybe<Users>;
 };
 
 
@@ -1385,6 +1394,34 @@ export type GetLaunchesWithArgsQuery = (
   )>>> }
 );
 
+export type UserAddedSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UserAddedSubscription = (
+  { __typename?: 'Subscription' }
+  & { userAdded?: Maybe<(
+    { __typename?: 'users' }
+    & Pick<Users, 'id' | 'name'>
+  )> }
+);
+
+export type InsertUsersAndPublishMutationVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+export type InsertUsersAndPublishMutation = (
+  { __typename?: 'Mutation' }
+  & { insert_users_and_publish?: Maybe<(
+    { __typename?: 'users_mutation_response' }
+    & Pick<Users_Mutation_Response, 'affected_rows'>
+    & { returning: Array<(
+      { __typename?: 'users' }
+      & Pick<Users, 'id' | 'name' | 'rocket'>
+    )> }
+  )> }
+);
+
 
 export const AddCodegenUserDoc = gql`
     mutation AddCodegenUser($userName: String!) {
@@ -1421,6 +1458,26 @@ export const GetLaunchesWithArgsDoc = gql`
   launches(limit: $limit) {
     mission_id
     mission_name
+  }
+}
+    `;
+export const UserAddedDoc = gql`
+    subscription UserAdded {
+  userAdded {
+    id
+    name
+  }
+}
+    `;
+export const InsertUsersAndPublishDoc = gql`
+    mutation InsertUsersAndPublish($name: String!) {
+  insert_users_and_publish(name: $name, rocket: "codegen") {
+    affected_rows
+    returning {
+      id
+      name
+      rocket
+    }
   }
 }
     `;
@@ -1553,3 +1610,26 @@ export const GetLaunchesWithArgs = (
             return result;
           }
         
+export const UserAdded = (
+            options: Omit<SubscriptionOptions<UserAddedSubscriptionVariables>, "query">
+          ) => {
+            const q = client.subscribe<UserAddedSubscription, UserAddedSubscriptionVariables>(
+              {
+                query: UserAddedDoc,
+                ...options,
+              }
+            )
+            return q;
+          }
+export const InsertUsersAndPublish = (
+            options: Omit<
+              MutationOptions<any, InsertUsersAndPublishMutationVariables>, 
+              "mutation"
+            >
+          ) => {
+            const m = client.mutate<InsertUsersAndPublishMutation, InsertUsersAndPublishMutationVariables>({
+              mutation: InsertUsersAndPublishDoc,
+              ...options,
+            });
+            return m;
+          }

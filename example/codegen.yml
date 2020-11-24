@@ -1,8 +1,9 @@
 schema:
-  - https://api.spacex.land/graphql/
+  # - https://api.spacex.land/graphql/
+  - https://space-x-land-with-sub.herokuapp.com/graphql/
 overwrite: true
 documents:
-  - "./src/**/*.gql"
+  - './src/**/*.gql'
 generates:
   src/codegen.ts:
     plugins:
@@ -10,4 +11,4 @@ generates:
       - typescript-operations
       - ../src/index.js
     config:
-      clientPath: "src/apollo-client"
+      clientPath: 'src/apollo-client'
