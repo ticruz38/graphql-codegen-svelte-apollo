@@ -37,9 +37,8 @@ module.exports = {
         var imports = [
             "import client from \"" + config.clientPath + "\";",
             "import type {\n        " + operationImport + "\n      } from \"@apollo/client\";",
-            "import { ApolloClient } from \"apollo-client\";",
-            "import { writable } from \"svelte/store\";",
-            "import type { Writable } from \"svelte/store\";",
+            "import { readable } from \"svelte/store\";",
+            "import type { Readable } from \"svelte/store\";",
             "import gql from \"graphql-tag\"",
         ];
         var ops = operations
@@ -51,7 +50,7 @@ module.exports = {
             var opv = op + "Variables";
             var operation;
             if (o.operation == "query") {
-                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              QueryOptions<" + opv + ">, \n              \"query\"\n            >\n          ): Writable<\n            ApolloQueryResult<" + op + "> & {\n              query: ObservableQuery<\n                " + op + ",\n                " + opv + "\n              >;\n            }\n          > => {\n            const q = client.watchQuery({\n              query: " + o.name.value + "Doc,\n              ...options,\n            });\n            var result = writable<\n              ApolloQueryResult<" + op + "> & {\n                query: ObservableQuery<\n                  " + op + ",\n                  " + opv + "\n                >;\n              }\n            >(\n              { data: null, loading: true, error: null, networkStatus: 1, query: null },\n              (set) => {\n                q.subscribe((v) => {\n                  set({ ...v, query: q });\n                });\n              }\n            );\n            return result;\n          }\n        ";
+                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              QueryOptions<" + opv + ">, \n              \"query\"\n            >\n          ): Readable<\n            ApolloQueryResult<" + op + "> & {\n              query: ObservableQuery<\n                " + op + ",\n                " + opv + "\n              >;\n            }\n          > => {\n            const q = client.watchQuery({\n              query: " + o.name.value + "Doc,\n              ...options,\n            });\n            var result = readable<\n              ApolloQueryResult<" + op + "> & {\n                query: ObservableQuery<\n                  " + op + ",\n                  " + opv + "\n                >;\n              }\n            >(\n              { data: null, loading: true, error: null, networkStatus: 1, query: null },\n              (set) => {\n                q.subscribe((v) => {\n                  set({ ...v, query: q });\n                });\n              }\n            );\n            return result;\n          }\n        ";
             }
             if (o.operation == "mutation") {
                 operation = "export const " + o.name.value + " = (\n            options: Omit<\n              MutationOptions<any, " + opv + ">, \n              \"mutation\"\n            >\n          ) => {\n            const m = client.mutate<" + op + ", " + opv + ">({\n              mutation: " + o.name.value + "Doc,\n              ...options,\n            });\n            return m;\n          }";

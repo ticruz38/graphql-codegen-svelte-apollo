@@ -6,9 +6,8 @@ import type {
   MutationOptions,
   SubscriptionOptions,
 } from "@apollo/client";
-import { ApolloClient } from "apollo-client";
-import { writable } from "svelte/store";
-import type { Writable } from "svelte/store";
+import { readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import gql from "graphql-tag";
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -1371,7 +1370,7 @@ export const NewUserDoc = gql`
 `;
 export const GetLaunches = (
   options: Omit<QueryOptions<GetLaunchesQueryVariables>, "query">
-): Writable<
+): Readable<
   ApolloQueryResult<GetLaunchesQuery> & {
     query: ObservableQuery<GetLaunchesQuery, GetLaunchesQueryVariables>;
   }
@@ -1380,7 +1379,7 @@ export const GetLaunches = (
     query: GetLaunchesDoc,
     ...options,
   });
-  var result = writable<
+  var result = readable<
     ApolloQueryResult<GetLaunchesQuery> & {
       query: ObservableQuery<GetLaunchesQuery, GetLaunchesQueryVariables>;
     }
@@ -1397,7 +1396,7 @@ export const GetLaunches = (
 
 export const GetLaunchesWithArgs = (
   options: Omit<QueryOptions<GetLaunchesWithArgsQueryVariables>, "query">
-): Writable<
+): Readable<
   ApolloQueryResult<GetLaunchesWithArgsQuery> & {
     query: ObservableQuery<
       GetLaunchesWithArgsQuery,
@@ -1409,7 +1408,7 @@ export const GetLaunchesWithArgs = (
     query: GetLaunchesWithArgsDoc,
     ...options,
   });
-  var result = writable<
+  var result = readable<
     ApolloQueryResult<GetLaunchesWithArgsQuery> & {
       query: ObservableQuery<
         GetLaunchesWithArgsQuery,

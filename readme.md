@@ -89,7 +89,7 @@ export const TransactionsDoc = gql`
 
 export const Transactions = (
   options: Omit<QueryOptions<TransactionsQueryVariables>, "query">
-): Writable<
+): Readable<
   ApolloQueryResult<TransactionsQuery> & {
     query: ObservableQuery<TransactionsQuery, TransactionsQueryVariables>;
   }
@@ -98,7 +98,7 @@ export const Transactions = (
     query: TransactionsDoc,
     ...options,
   });
-  var result = writable<
+  var result = readable<
     ApolloQueryResult<TransactionsQuery> & {
       query: ObservableQuery<TransactionsQuery, TransactionsQueryVariables>;
     }

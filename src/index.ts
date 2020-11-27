@@ -66,9 +66,8 @@ module.exports = {
       `import type {
         ${operationImport}
       } from "@apollo/client";`,
-      `import { ApolloClient } from "apollo-client";`,
-      `import { writable } from "svelte/store";`,
-      `import type { Writable } from "svelte/store";`,
+      `import { readable } from "svelte/store";`,
+      `import type { Readable } from "svelte/store";`,
       `import gql from "graphql-tag"`,
     ];
 
@@ -88,7 +87,7 @@ module.exports = {
               QueryOptions<${opv}>, 
               "query"
             >
-          ): Writable<
+          ): Readable<
             ApolloQueryResult<${op}> & {
               query: ObservableQuery<
                 ${op},
@@ -100,7 +99,7 @@ module.exports = {
               query: ${o.name.value}Doc,
               ...options,
             });
-            var result = writable<
+            var result = readable<
               ApolloQueryResult<${op}> & {
                 query: ObservableQuery<
                   ${op},
