@@ -2,11 +2,12 @@
   import {
     DeleteCodegenUser,
     GetCodegenUsers,
+    GetCodegenUsersDoc,
     InsertUsersAndPublish,
     UserAdded,
-  } from 'src/codegen';
+  } from "src/codegen";
 
-  $: userName = '';
+  $: userName = "";
   $: query = GetCodegenUsers({});
   $: subscription = UserAdded({});
 </script>
@@ -33,7 +34,10 @@
     <button
       disabled={userName.length === 0}
       on:click={() => {
-        InsertUsersAndPublish({ variables: { name: userName } });
+        InsertUsersAndPublish({
+          variables: { name: userName },
+          refetchQueries: [{ query: GetCodegenUsersDoc }],
+        });
         userName = '';
       }}>Add</button>
   </div>
@@ -59,8 +63,9 @@
       <button
         style="float: right"
         on:click={() => {
-          DeleteCodegenUser({});
-          console.log('should trigger the query also...(F5 for now)');
+          DeleteCodegenUser({
+            refetchQueries: [{ query: GetCodegenUsersDoc }],
+          });
         }}>Delete all</button>
     {/if}
   </div>

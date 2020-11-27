@@ -2,10 +2,12 @@
   import {
     AddCodegenUser,
     DeleteCodegenUser,
+    DeleteCodegenUserDoc,
     GetCodegenUsers,
-  } from 'src/codegen';
+    GetCodegenUsersDoc,
+  } from "src/codegen";
 
-  $: userName = '';
+  $: userName = "";
   $: query = GetCodegenUsers({});
 </script>
 
@@ -31,7 +33,10 @@
     <button
       disabled={userName.length === 0}
       on:click={() => {
-        AddCodegenUser({ variables: { userName } });
+        AddCodegenUser({
+          variables: { userName },
+          refetchQueries: [{ query: GetCodegenUsersDoc }],
+        });
         userName = '';
       }}>Add</button>
   </div>
@@ -46,16 +51,13 @@
       {#each $query.data?.users || [] as user, i}
         <div>User {i + 1} -&gt; {user.name}</div>
       {/each}
-      <!-- manually trigger the query again?-->
-      <button
-        on:click={() => console.log('Trigger the query!!! (F5 for now)')}>Refresh</button>
-
-      <!-- auto trigger the query again?-->
+      <button on:click={() => $query.query.refetch({})}>Refresh</button>
       <button
         style="float: right"
         on:click={() => {
-          DeleteCodegenUser({});
-          console.log('should trigger the query also...(F5 for now)');
+          DeleteCodegenUser({
+            refetchQueries: [{ query: GetCodegenUsersDoc }],
+          });
         }}>Delete all</button>
     {/if}
   </div>
