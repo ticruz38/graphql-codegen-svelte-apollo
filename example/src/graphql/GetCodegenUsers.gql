@@ -1,0 +1,6 @@
+query GetCodegenUsers {
+  users(where: { rocket: { _eq: "codegen" } }) {
+    name
+    timestamp
+  }
+}

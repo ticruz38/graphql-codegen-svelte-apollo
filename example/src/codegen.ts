@@ -1134,6 +1134,7 @@ export type Mutation = {
   insert_users?: Maybe<Users_Mutation_Response>;
   /** update data of the table: "users" */
   update_users?: Maybe<Users_Mutation_Response>;
+  insert_users_and_publish?: Maybe<Users_Mutation_Response>;
 };
 
 export type MutationDelete_UsersArgs = {
@@ -1148,6 +1149,12 @@ export type MutationInsert_UsersArgs = {
 export type MutationUpdate_UsersArgs = {
   _set?: Maybe<Users_Set_Input>;
   where: Users_Bool_Exp;
+};
+
+export type MutationInsert_Users_And_PublishArgs = {
+  name: Scalars["String"];
+  rocket?: Maybe<Scalars["String"]>;
+  twitter?: Maybe<Scalars["String"]>;
 };
 
 /** response of any mutation on the table "users" */
@@ -1211,6 +1218,7 @@ export type Subscription = {
   users_aggregate: Users_Aggregate;
   /** fetch data from the table: "users" using primary key columns */
   users_by_pk?: Maybe<Users>;
+  userAdded?: Maybe<Users>;
 };
 
 export type SubscriptionUsersArgs = {
@@ -1282,6 +1290,38 @@ export type CoreMission = {
   flight?: Maybe<Scalars["Int"]>;
 };
 
+export type AddCodegenUserMutationVariables = Exact<{
+  userName: Scalars["String"];
+}>;
+
+export type AddCodegenUserMutation = { __typename?: "Mutation" } & {
+  insert_users?: Maybe<
+    { __typename?: "users_mutation_response" } & Pick<
+      Users_Mutation_Response,
+      "affected_rows"
+    >
+  >;
+};
+
+export type DeleteCodegenUserMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type DeleteCodegenUserMutation = { __typename?: "Mutation" } & {
+  delete_users?: Maybe<
+    { __typename?: "users_mutation_response" } & Pick<
+      Users_Mutation_Response,
+      "affected_rows"
+    >
+  >;
+};
+
+export type GetCodegenUsersQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetCodegenUsersQuery = { __typename?: "Query" } & {
+  users: Array<{ __typename?: "users" } & Pick<Users, "name" | "timestamp">>;
+};
+
 export type GetLaunchesQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetLaunchesQuery = { __typename?: "Query" } & {
@@ -1308,30 +1348,51 @@ export type GetLaunchesWithArgsQuery = { __typename?: "Query" } & {
   >;
 };
 
-export type UpdateUserMutationVariables = Exact<{
-  user?: Maybe<Users_Set_Input>;
-  where: Users_Bool_Exp;
+export type UserAddedSubscriptionVariables = Exact<{ [key: string]: never }>;
+
+export type UserAddedSubscription = { __typename?: "Subscription" } & {
+  userAdded?: Maybe<{ __typename?: "users" } & Pick<Users, "id" | "name">>;
+};
+
+export type InsertUsersAndPublishMutationVariables = Exact<{
+  name: Scalars["String"];
 }>;
 
-export type UpdateUserMutation = { __typename?: "Mutation" } & {
-  update_users?: Maybe<
+export type InsertUsersAndPublishMutation = { __typename?: "Mutation" } & {
+  insert_users_and_publish?: Maybe<
     { __typename?: "users_mutation_response" } & Pick<
       Users_Mutation_Response,
       "affected_rows"
     > & {
-        returning: Array<{ __typename?: "users" } & Pick<Users, "id" | "name">>;
+        returning: Array<
+          { __typename?: "users" } & Pick<Users, "id" | "name" | "rocket">
+        >;
       }
   >;
 };
 
-export type NewUserSubscriptionVariables = Exact<{ [key: string]: never }>;
-
-export type NewUserSubscription = { __typename?: "Subscription" } & {
-  users: Array<
-    { __typename?: "users" } & Pick<Users, "id" | "name" | "rocket">
-  >;
-};
-
+export const AddCodegenUserDoc = gql`
+  mutation AddCodegenUser($userName: String!) {
+    insert_users(objects: { name: $userName, rocket: "codegen" }) {
+      affected_rows
+    }
+  }
+`;
+export const DeleteCodegenUserDoc = gql`
+  mutation DeleteCodegenUser {
+    delete_users(where: { rocket: { _eq: "codegen" } }) {
+      affected_rows
+    }
+  }
+`;
+export const GetCodegenUsersDoc = gql`
+  query GetCodegenUsers {
+    users(where: { rocket: { _eq: "codegen" } }) {
+      name
+      timestamp
+    }
+  }
+`;
 export const GetLaunchesDoc = gql`
   query GetLaunches {
     launches {
@@ -1348,26 +1409,85 @@ export const GetLaunchesWithArgsDoc = gql`
     }
   }
 `;
-export const UpdateUserDoc = gql`
-  mutation UpdateUser($user: users_set_input, $where: users_bool_exp!) {
-    update_users(_set: $user, where: $where) {
+export const UserAddedDoc = gql`
+  subscription UserAdded {
+    userAdded {
+      id
+      name
+    }
+  }
+`;
+export const InsertUsersAndPublishDoc = gql`
+  mutation InsertUsersAndPublish($name: String!) {
+    insert_users_and_publish(name: $name, rocket: "codegen") {
       affected_rows
       returning {
         id
         name
+        rocket
       }
     }
   }
 `;
-export const NewUserDoc = gql`
-  subscription NewUser {
-    users {
-      id
-      name
-      rocket
-    }
+export const AddCodegenUser = (
+  options: Omit<
+    MutationOptions<any, AddCodegenUserMutationVariables>,
+    "mutation"
+  >
+) => {
+  const m = client.mutate<
+    AddCodegenUserMutation,
+    AddCodegenUserMutationVariables
+  >({
+    mutation: AddCodegenUserDoc,
+    ...options,
+  });
+  return m;
+};
+export const DeleteCodegenUser = (
+  options: Omit<
+    MutationOptions<any, DeleteCodegenUserMutationVariables>,
+    "mutation"
+  >
+) => {
+  const m = client.mutate<
+    DeleteCodegenUserMutation,
+    DeleteCodegenUserMutationVariables
+  >({
+    mutation: DeleteCodegenUserDoc,
+    ...options,
+  });
+  return m;
+};
+export const GetCodegenUsers = (
+  options: Omit<QueryOptions<GetCodegenUsersQueryVariables>, "query">
+): Readable<
+  ApolloQueryResult<GetCodegenUsersQuery> & {
+    query: ObservableQuery<GetCodegenUsersQuery, GetCodegenUsersQueryVariables>;
   }
-`;
+> => {
+  const q = client.watchQuery({
+    query: GetCodegenUsersDoc,
+    ...options,
+  });
+  var result = readable<
+    ApolloQueryResult<GetCodegenUsersQuery> & {
+      query: ObservableQuery<
+        GetCodegenUsersQuery,
+        GetCodegenUsersQueryVariables
+      >;
+    }
+  >(
+    { data: null, loading: true, error: null, networkStatus: 1, query: null },
+    (set) => {
+      q.subscribe((v) => {
+        set({ ...v, query: q });
+      });
+    }
+  );
+  return result;
+};
+
 export const GetLaunches = (
   options: Omit<QueryOptions<GetLaunchesQueryVariables>, "query">
 ): Readable<
@@ -1426,23 +1546,30 @@ export const GetLaunchesWithArgs = (
   return result;
 };
 
-export const UpdateUser = (
-  options: Omit<MutationOptions<any, UpdateUserMutationVariables>, "mutation">
+export const UserAdded = (
+  options: Omit<SubscriptionOptions<UserAddedSubscriptionVariables>, "query">
 ) => {
-  const m = client.mutate<UpdateUserMutation, UpdateUserMutationVariables>({
-    mutation: UpdateUserDoc,
+  const q = client.subscribe<
+    UserAddedSubscription,
+    UserAddedSubscriptionVariables
+  >({
+    query: UserAddedDoc,
+    ...options,
+  });
+  return q;
+};
+export const InsertUsersAndPublish = (
+  options: Omit<
+    MutationOptions<any, InsertUsersAndPublishMutationVariables>,
+    "mutation"
+  >
+) => {
+  const m = client.mutate<
+    InsertUsersAndPublishMutation,
+    InsertUsersAndPublishMutationVariables
+  >({
+    mutation: InsertUsersAndPublishDoc,
     ...options,
   });
   return m;
-};
-export const NewUser = (
-  options: Omit<SubscriptionOptions<NewUserSubscriptionVariables>, "query">
-) => {
-  const q = client.subscribe<NewUserSubscription, NewUserSubscriptionVariables>(
-    {
-      query: NewUserDoc,
-      ...options,
-    }
-  );
-  return q;
 };

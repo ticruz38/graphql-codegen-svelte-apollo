@@ -1,68 +1,56 @@
-<script lang="ts">
-  import {
-    GetLaunches,
-    GetLaunchesWithArgs,
-    NewUser,
-    UpdateUser,
-  } from "src/codegen";
+<script>
+  import { Router, Route } from 'svelte-routing';
+  import PageQueries from './routes/PageQueries.svelte';
+  import PageQueriesWithArgs from './routes/PageQueriesWithArgs.svelte';
+  import PageMutation from './routes/PageMutation.svelte';
+  import PageSubscription from './routes/PageSubscription.svelte';
+  import NavLink from './components/NavLink.svelte';
 
-  let limit = 10;
-  let users = [];
-
-  $: l = GetLaunches({});
-
-  $: q = GetLaunchesWithArgs({ variables: { limit } });
-
-  $: newUser = NewUser({ variables: {} });
-
-  $: {
-    if ($newUser && !$newUser.errors) {
-      users = [...users, ...$newUser?.data?.users?.map((u) => u.name)];
-    } else {
-      console.error($newUser && $newUser.errors);
-    }
-  }
-
-  async function updateUser() {
-    const res = await UpdateUser({
-      variables: {
-        where: { id: { _eq: "1" } },
-        user: { id: "1", name: "codegenerator" },
-      },
-    });
-    if (res.errors) {
-      console.log(res.errors);
-    } else {
-      console.log(res.data.update_users.returning.map((r) => r.name));
-    }
-  }
+  export let url = '';
 </script>
 
 <style>
-  .flex {
+  .title {
+    background-color: #444444;
+    height: 100px;
     display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: xx-large;
+  }
+
+  nav {
+    background-color: #ff3e00;
+    height: 60px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    color: white;
   }
 </style>
 
-<button on:click={(_) => (limit = 10)}>Last 10 launches</button>
-<button on:click={(_) => (limit = 20)}>Last 20 launches</button>
+<div class="title">graphql-codegen-svelte-apollo</div>
 
-<button on:click={(_) => $q.query.refetch({ limit })}>Refetch</button>
-<button on:click={(_) => updateUser()}>Update user</button>
-
-<main class="flex">
+<Router {url}>
+  <nav>
+    <NavLink to="/">Query</NavLink>
+    <NavLink to="withArgs">Query (withArgs)</NavLink>
+    <NavLink to="mutation">Mutation</NavLink>
+    <NavLink to="subscription">Subscription</NavLink>
+  </nav>
   <div>
-    <h1>SpaceX launches</h1>
-    {#each $l.data?.launches || [] as launch}
-      <div>{launch.mission_id}</div>
-      <div>{launch.mission_name}</div>
-    {/each}
+    <Route path="">
+      <PageQueries />
+    </Route>
+    <Route path="withArgs">
+      <PageQueriesWithArgs />
+    </Route>
+    <Route path="mutation">
+      <PageMutation />
+    </Route>
+    <Route path="subscription">
+      <PageSubscription />
+    </Route>
   </div>
-  <div>
-    <h1>SpaceX last {limit} launches</h1>
-    {#each $q.data?.launches || [] as launch}
-      <div>{launch.mission_id}</div>
-      <div>{launch.mission_name}</div>
-    {/each}
-  </div>
-</main>
+</Router>

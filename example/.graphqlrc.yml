@@ -1,2 +1,2 @@
-schema: https://api.spacex.land/graphql/
+schema: https://space-x-land-with-sub.herokuapp.com/graphql/
 documents: "src/**/*.gql"
