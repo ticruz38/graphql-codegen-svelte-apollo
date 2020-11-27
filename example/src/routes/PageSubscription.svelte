@@ -3,13 +3,13 @@
     DeleteCodegenUser,
     GetCodegenUsers,
     GetCodegenUsersDoc,
-    InsertUsersAndPublish,
-    UserAdded,
-  } from "src/codegen";
+    UsersAdded,
+    AddCodegenUser,
+  } from 'src/codegen';
 
-  $: userName = "";
+  $: userName = '';
   $: query = GetCodegenUsers({});
-  $: subscription = UserAdded({});
+  $: subscription = UsersAdded({});
 </script>
 
 <style>
@@ -34,17 +34,14 @@
     <button
       disabled={userName.length === 0}
       on:click={() => {
-        InsertUsersAndPublish({
-          variables: { name: userName },
-          refetchQueries: [{ query: GetCodegenUsersDoc }],
-        });
+        AddCodegenUser({ variables: { userName } });
         userName = '';
       }}>Add</button>
   </div>
   <div class="card">
     <h2>Last user added</h2>
     <div>
-      <pre>{$subscription?.data?.userAdded}</pre>
+      <pre>{$subscription?.data}</pre>
     </div>
   </div>
   <div class="card">

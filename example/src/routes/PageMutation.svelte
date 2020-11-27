@@ -5,9 +5,9 @@
     DeleteCodegenUserDoc,
     GetCodegenUsers,
     GetCodegenUsersDoc,
-  } from "src/codegen";
+  } from 'src/codegen';
 
-  $: userName = "";
+  $: userName = '';
   $: query = GetCodegenUsers({});
 </script>
 
@@ -33,10 +33,9 @@
     <button
       disabled={userName.length === 0}
       on:click={() => {
-        AddCodegenUser({
-          variables: { userName },
-          refetchQueries: [{ query: GetCodegenUsersDoc }],
-        });
+        AddCodegenUser({ variables: { userName } });
+        // you can "auto refresh queries" adding the code bellow to AddCodegenUser (but here we want to demo the manual refresh button)
+        // refetchQueries: [{ query: GetCodegenUsersDoc }],
         userName = '';
       }}>Add</button>
   </div>
