@@ -1396,7 +1396,9 @@ export type UsersAddedSubscription = (
   )>>> }
 );
 
-export type InsertUsersAndPublishMutationVariables = Exact<{ [key: string]: never; }>;
+export type InsertUsersAndPublishMutationVariables = Exact<{
+  name: Scalars['String'];
+}>;
 
 
 export type InsertUsersAndPublishMutation = (
@@ -1460,8 +1462,8 @@ export const UsersAddedDoc = gql`
 }
     `;
 export const InsertUsersAndPublishDoc = gql`
-    mutation InsertUsersAndPublish {
-  insert_users(objects: {name: "JYC", rocket: "codegen"}) {
+    mutation InsertUsersAndPublish($name: String!) {
+  insert_users(objects: {name: $name, rocket: "codegen"}) {
     affected_rows
     returning {
       name

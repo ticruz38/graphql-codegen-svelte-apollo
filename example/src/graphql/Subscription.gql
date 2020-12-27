@@ -8,8 +8,8 @@ subscription UsersAdded {
 }
 
 # Insert a new user and Publish
-mutation InsertUsersAndPublish {
-  insert_users(objects: { name: "JYC", rocket: "codegen" }) {
+mutation InsertUsersAndPublish($name: String!) {
+  insert_users(objects: { name: $name, rocket: "codegen" }) {
     affected_rows
     returning {
       name
