@@ -1,0 +1,34 @@
+html,
+body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+}
+
+a {
+  color: white;
+  text-decoration: none;
+  font-size: large;
+  font-weight: bold;
+}
+
+a:hover {
+  padding: 4px;
+  border-bottom: 2px solid white;
+}
+
+a:visited {
+  color: white;
+}
+
+a.active {
+  padding: 4px;
+  border-bottom: 2px solid white;
+}
