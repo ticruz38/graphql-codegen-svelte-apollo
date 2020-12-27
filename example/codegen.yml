@@ -9,6 +9,7 @@ generates:
     plugins:
       - typescript
       - typescript-operations
-      - ../src/index.js
+      - ../src/index.js # in codegen-svelte-apollo lib developement
+      # - svelte-apollo # in real usage of the lib
     config:
       clientPath: 'src/apollo-client'

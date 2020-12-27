@@ -1,15 +1,17 @@
-subscription UserAdded {
-  userAdded {
+# subscribe to added users
+subscription UsersAdded {
+  usersAdded {
     id
     name
+    timestamp
   }
 }
 
-mutation InsertUsersAndPublish($name: String!) {
-  insert_users_and_publish(name: $name, rocket: "codegen") {
+# Insert a new user and Publish
+mutation InsertUsersAndPublish {
+  insert_users(objects: { name: "JYC", rocket: "codegen" }) {
     affected_rows
     returning {
-      id
       name
       rocket
     }

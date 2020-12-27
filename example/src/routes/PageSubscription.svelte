@@ -4,12 +4,12 @@
     GetCodegenUsers,
     GetCodegenUsersDoc,
     InsertUsersAndPublish,
-    UserAdded,
+    UsersAdded,
   } from "src/codegen";
 
   $: userName = "";
   $: query = GetCodegenUsers({});
-  $: subscription = UserAdded({});
+  $: subscription = UsersAdded({});
 </script>
 
 <style>
