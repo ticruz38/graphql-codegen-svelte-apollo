@@ -7,7 +7,7 @@
     "start": "sirv public -s",
     "types": "cross-env DEBUG=1 && graphql-codegen",
     "validate": "svelte-check",
-    "pre-gh-pages": "npm run build",
+    "pregh-pages": "npm run build",
     "gh-pages": "cp -R public/* ../docs"
   },
   "devDependencies": {
