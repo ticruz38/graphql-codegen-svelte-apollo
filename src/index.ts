@@ -78,7 +78,7 @@ module.exports = {
             d.rawSDL.includes(`${o.operation} ${o.name.value}`)
           ).rawSDL
         }\``;
-        const op = `${o.name.value}${pascalCase(o.operation)}`;
+        const op = `${pascalCase(o.name.value)}${pascalCase(o.operation)}`;
         const opv = `${op}Variables`;
         let operation;
         if (o.operation == "query") {
@@ -96,7 +96,7 @@ module.exports = {
             }
           > => {
             const q = client.watchQuery({
-              query: ${o.name.value}Doc,
+              query: ${pascalCase(o.name.value)}Doc,
               ...options,
             });
             var result = readable<
@@ -126,7 +126,7 @@ module.exports = {
             >
           ) => {
             const m = client.mutate<${op}, ${opv}>({
-              mutation: ${o.name.value}Doc,
+              mutation: ${pascalCase(o.name.value)}Doc,
               ...options,
             });
             return m;
@@ -138,7 +138,7 @@ module.exports = {
           ) => {
             const q = client.subscribe<${op}, ${opv}>(
               {
-                query: ${o.name.value}Doc,
+                query: ${pascalCase(o.name.value)}Doc,
                 ...options,
               }
             )
