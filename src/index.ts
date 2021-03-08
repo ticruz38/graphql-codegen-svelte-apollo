@@ -49,7 +49,7 @@ module.exports = {
 
     const operationImport = `${
       operations.some((op) => op.operation == "query")
-        ? "ApolloQueryResult, ObservableQuery, QueryOptions, "
+        ? "ApolloQueryResult, ObservableQuery, WatchQueryOptions, "
         : ""
     }${
       operations.some((op) => op.operation == "mutation")
@@ -84,7 +84,7 @@ module.exports = {
         if (o.operation == "query") {
           operation = `export const ${o.name.value} = (
             options: Omit<
-              QueryOptions<${opv}>, 
+              WatchQueryOptions<${opv}>, 
               "query"
             >
           ): Readable<
