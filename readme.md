@@ -1,7 +1,7 @@
 # Svelte GraphQL generator for Apollo
 GraphQL Code Generator plugin to use Apollo in Svelte with full Typescript support.
 Because Svelte and Apollo share the same reactive programming, Apollo queries are treated like Svelte store. 
-Hence that generator is all you'll ever need if you want to use Apollo with Svelte.
+Hence that generator is all you need if you want to use Apollo with Svelte.
 See a live example [here](https://ticruz38.github.io/graphql-codegen-svelte-apollo/), the code for this is in the /example folder
 
 ## Motivation
@@ -12,7 +12,7 @@ It turns out that Svelte with its reactive programming, is particularly well des
 
 ## Note
 
-graphql-codegen-svelte-apollo is a plugin for [graphql-code-generator](https://graphql-code-generator.com) ecosystem, please refer to their great wesite for documentation relative to the configuration in codegen.yml
+graphql-codegen-svelte-apollo is a plugin for [graphql-code-generator](https://graphql-code-generator.com) ecosystem, please refer to their [website](https://graphql-code-generator.com) for documentation relative to the configuration in codegen.yml
 
 ## Installation
 
@@ -22,7 +22,7 @@ graphql-codegen-svelte-apollo is a plugin for [graphql-code-generator](https://g
 ## Configuration
 
 - `clientPath` (default: null): Path to the apollo client for this project (should point to a file with an apollo-client as default export)
-- `asyncQuery` (default: null): By default, the plugin only generate observable queries, sometimes it may be usefule to generate promise-based query
+- `asyncQuery` (default: null): By default, the plugin only generate observable queries, sometimes it may be useful to generate promise-based queries
 
 Note: typescript and typescript-operations plugins are required.
 
@@ -141,7 +141,7 @@ And use it as follow in your svelte file:
 </ul>
 ```
 
-Sometimes, you may need/prefer to have an async query (only available when asyncQuery options is set to true)
+Sometimes, you may need/prefer to have an async query (only available with asyncQuery option set to true)
 
 ```html
 <script lang="ts">
