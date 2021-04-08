@@ -1,4 +1,4 @@
-# Svelte GraphQL generator for Apollo
+# GraphQL code generator for Apollo and Svelte
 GraphQL Code Generator plugin to use Apollo in Svelte with full Typescript support.
 Because Svelte and Apollo share the same reactive programming, Apollo queries are treated like Svelte store. 
 Hence that generator is all you need if you want to use Apollo with Svelte.
@@ -17,6 +17,7 @@ graphql-codegen-svelte-apollo is a plugin for [graphql-code-generator](https://g
 ## Installation
 
 `npm i -S graphql`
+
 `npm i -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations graphql-codegen-svelte-apollo`
 
 ## Configuration
