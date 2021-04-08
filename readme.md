@@ -10,13 +10,19 @@ See a live example [here](https://ticruz38.github.io/graphql-codegen-svelte-apol
 Unlike other big frameworks, Svelte was still missing a graphql-code-generator plugin for client queries.
 It turns out that Svelte with its reactive programming, is particularly well designed to be used together with Apollo
 
-## Install
+## Note
 
-`npm i -S graphql-codegen-svelte-apollo`
+graphql-codegen-svelte-apollo is a plugin for [graphql-code-generator](https://graphql-code-generator.com) ecosystem, please refer to their great wesite for documentation relative to the configuration in codegen.yml
+
+## Installation
+
+`npm i -S graphql`
+`npm i -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations graphql-codegen-svelte-apollo`
 
 ## Configuration
 
 - `clientPath` (default: null): Path to the apollo client for this project (should point to a file with an apollo-client as default export)
+- `asyncQuery` (default: null): By default, the plugin only generate observable queries, sometimes it may be usefule to generate promise-based query
 
 Note: typescript and typescript-operations plugins are required.
 
@@ -36,6 +42,7 @@ generates:
             - 'graphql-codegen-svelte-apollo'
         config:
           clientPath: "PATH_TO_APOLLO_CLIENT"
+          asyncQuery: true
 hooks:
     afterAllFileWrite:
         - prettier --write
@@ -121,6 +128,8 @@ And use it as follow in your svelte file:
 
 ```html
 <script lang="ts">
+  import { Transactions } from "codegen";
+
   var address = "0x0000000000000000000000000000"
   $: t = Transactions({ address });
 </script>
@@ -129,6 +138,26 @@ And use it as follow in your svelte file:
     {#each $t?.data?.transactions || [] as transaction}
         <li>Sent transaction from {transaction.from} to {transaction.to}</li>
     {/each}
+</ul>
+```
+
+Sometimes, you may need/prefer to have an async query (only available when asyncQuery options is set to true)
+
+```html
+<script lang="ts">
+  import { AsyncTransactions } from "codegen";
+
+  var address = "0x0000000000000000000000000000"
+</script>
+
+<ul>
+  {#await AsyncTransactions({ address })}
+    Loading...
+  {:then transactions}
+    {#each transactions || [] as transaction}
+        <li>Sent transaction from {transaction.from} to {transaction.to}</li>
+    {/each}
+  {/await}
 </ul>
 ```
 

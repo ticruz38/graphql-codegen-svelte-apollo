@@ -49,7 +49,9 @@ module.exports = {
 
     const operationImport = `${
       operations.some((op) => op.operation == "query")
-        ? "ApolloQueryResult, ObservableQuery, WatchQueryOptions, "
+        ? `ApolloQueryResult, ObservableQuery, WatchQueryOptions, ${
+            config.asyncQuery ? "QueryOptions, " : ""
+          }`
         : ""
     }${
       operations.some((op) => op.operation == "mutation")
@@ -117,6 +119,22 @@ module.exports = {
             return result;
           }
         `;
+          if (config.asyncQuery) {
+            operation =
+              operation +
+              `
+              export const Async${o.name.value} = (
+                options: Omit<
+                  QueryOptions<${opv}>,
+                  "query"
+                >
+              ) => {
+                return client.query<${op}>({query: ${pascalCase(
+                o.name.value
+              )}Doc, ...options})
+              }
+            `;
+          }
         }
         if (o.operation == "mutation") {
           operation = `export const ${o.name.value} = (
