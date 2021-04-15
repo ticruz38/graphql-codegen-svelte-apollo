@@ -1,10 +1,8 @@
 "use strict";
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __spreadArray = (this && this.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
 };
 exports.__esModule = true;
 var graphql_1 = require("graphql");
@@ -18,17 +16,17 @@ var operationMap = {
 module.exports = {
     plugin: function (schema, documents, config, info) {
         var allAst = graphql_1.concatAST(documents.map(function (d) { return d.document; }));
-        var allFragments = __spreadArrays(allAst.definitions.filter(function (d) { return d.kind === graphql_1.Kind.FRAGMENT_DEFINITION; }).map(function (fragmentDef) { return ({
+        var allFragments = __spreadArray(__spreadArray([], allAst.definitions.filter(function (d) { return d.kind === graphql_1.Kind.FRAGMENT_DEFINITION; }).map(function (fragmentDef) { return ({
             node: fragmentDef,
             name: fragmentDef.name.value,
             onType: fragmentDef.typeCondition.name.value,
             isExternal: false
-        }); }), (config.externalFragments || []));
+        }); })), (config.externalFragments || []));
         var visitor = new visitorPluginCommon.ClientSideBaseVisitor(schema, allFragments, {}, { documentVariableSuffix: "Doc" }, documents);
         var visitorResult = graphql_1.visit(allAst, { leave: visitor });
         var operations = allAst.definitions.filter(function (d) { return d.kind === graphql_1.Kind.OPERATION_DEFINITION; });
         var operationImport = ("" + (operations.some(function (op) { return op.operation == "query"; })
-            ? "ApolloQueryResult, ObservableQuery, QueryOptions, "
+            ? "ApolloQueryResult, ObservableQuery, WatchQueryOptions, " + (config.asyncQuery ? "QueryOptions, " : "")
             : "") + (operations.some(function (op) { return op.operation == "mutation"; })
             ? "MutationOptions, "
             : "") + (operations.some(function (op) { return op.operation == "subscription"; })
@@ -50,7 +48,12 @@ module.exports = {
             var opv = op + "Variables";
             var operation;
             if (o.operation == "query") {
-                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              QueryOptions<" + opv + ">, \n              \"query\"\n            >\n          ): Readable<\n            ApolloQueryResult<" + op + "> & {\n              query: ObservableQuery<\n                " + op + ",\n                " + opv + "\n              >;\n            }\n          > => {\n            const q = client.watchQuery({\n              query: " + pascal_case_1.pascalCase(o.name.value) + "Doc,\n              ...options,\n            });\n            var result = readable<\n              ApolloQueryResult<" + op + "> & {\n                query: ObservableQuery<\n                  " + op + ",\n                  " + opv + "\n                >;\n              }\n            >(\n              { data: null, loading: true, error: null, networkStatus: 1, query: null },\n              (set) => {\n                q.subscribe((v) => {\n                  set({ ...v, query: q });\n                });\n              }\n            );\n            return result;\n          }\n        ";
+                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              WatchQueryOptions<" + opv + ">, \n              \"query\"\n            >\n          ): Readable<\n            ApolloQueryResult<" + op + "> & {\n              query: ObservableQuery<\n                " + op + ",\n                " + opv + "\n              >;\n            }\n          > => {\n            const q = client.watchQuery({\n              query: " + pascal_case_1.pascalCase(o.name.value) + "Doc,\n              ...options,\n            });\n            var result = readable<\n              ApolloQueryResult<" + op + "> & {\n                query: ObservableQuery<\n                  " + op + ",\n                  " + opv + "\n                >;\n              }\n            >(\n              { data: null, loading: true, error: null, networkStatus: 1, query: null },\n              (set) => {\n                q.subscribe((v) => {\n                  set({ ...v, query: q });\n                });\n              }\n            );\n            return result;\n          }\n        ";
+                if (config.asyncQuery) {
+                    operation =
+                        operation +
+                            ("\n              export const Async" + o.name.value + " = (\n                options: Omit<\n                  QueryOptions<" + opv + ">,\n                  \"query\"\n                >\n              ) => {\n                return client.query<" + op + ">({query: " + pascal_case_1.pascalCase(o.name.value) + "Doc, ...options})\n              }\n            ");
+                }
             }
             if (o.operation == "mutation") {
                 operation = "export const " + o.name.value + " = (\n            options: Omit<\n              MutationOptions<any, " + opv + ">, \n              \"mutation\"\n            >\n          ) => {\n            const m = client.mutate<" + op + ", " + opv + ">({\n              mutation: " + pascal_case_1.pascalCase(o.name.value) + "Doc,\n              ...options,\n            });\n            return m;\n          }";
@@ -63,9 +66,9 @@ module.exports = {
             .join("\n");
         return {
             prepend: imports,
-            content: __spreadArrays([
+            content: __spreadArray(__spreadArray([
                 visitor.fragments
-            ], visitorResult.definitions.filter(function (t) { return typeof t == "string"; }), [
+            ], visitorResult.definitions.filter(function (t) { return typeof t == "string"; })), [
                 ops,
             ]).join("\n")
         };
