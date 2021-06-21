@@ -123,7 +123,7 @@ module.exports = {
             operation =
               operation +
               `
-              export const Async${o.name.value} = (
+              export const Async${pascalCase(o.name.value)} = (
                 options: Omit<
                   QueryOptions<${opv}>,
                   "query"
