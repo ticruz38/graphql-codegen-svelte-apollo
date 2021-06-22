@@ -52,7 +52,7 @@ module.exports = {
                 if (config.asyncQuery) {
                     operation =
                         operation +
-                            ("\n              export const Async" + o.name.value + " = (\n                options: Omit<\n                  QueryOptions<" + opv + ">,\n                  \"query\"\n                >\n              ) => {\n                return client.query<" + op + ">({query: " + pascal_case_1.pascalCase(o.name.value) + "Doc, ...options})\n              }\n            ");
+                            ("\n              export const Async" + pascal_case_1.pascalCase(o.name.value) + " = (\n                options: Omit<\n                  QueryOptions<" + opv + ">,\n                  \"query\"\n                >\n              ) => {\n                return client.query<" + op + ">({query: " + pascal_case_1.pascalCase(o.name.value) + "Doc, ...options})\n              }\n            ");
                 }
             }
             if (o.operation == "mutation") {
