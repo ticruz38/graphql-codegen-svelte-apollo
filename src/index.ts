@@ -23,9 +23,11 @@ module.exports = {
     const allAst = concatAST(documents.map((d) => d.document));
 
     const allFragments: LoadedFragment[] = [
-      ...(allAst.definitions.filter(
-        (d) => d.kind === Kind.FRAGMENT_DEFINITION
-      ) as FragmentDefinitionNode[]).map((fragmentDef) => ({
+      ...(
+        allAst.definitions.filter(
+          (d) => d.kind === Kind.FRAGMENT_DEFINITION
+        ) as FragmentDefinitionNode[]
+      ).map((fragmentDef) => ({
         node: fragmentDef,
         name: fragmentDef.name.value,
         onType: fragmentDef.typeCondition.name.value,
@@ -109,9 +111,9 @@ module.exports = {
                 >;
               }
             >(
-              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              { data: {} as any, loading: true, error: undefined, networkStatus: 1, query: q },
               (set) => {
-                q.subscribe((v) => {
+                q.subscribe((v: any) => {
                   set({ ...v, query: q });
                 });
               }
