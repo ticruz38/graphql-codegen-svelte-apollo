@@ -13,3 +13,9 @@ generates:
       # - svelte-apollo # in real usage of the lib
     config:
       clientPath: 'src/apollo-client'
+      asyncQuery: true
+      queryOperationPrefix: 'use'      
+      queryOperationSuffix: 'Query'      
+      fragmentVariableSuffix: 'Fragment'
+      documentVariableSuffix: 'Document'
+

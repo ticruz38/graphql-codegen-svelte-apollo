@@ -1,6 +1,9 @@
+fragment Launches on Launch{
+  mission_id
+  mission_name
+}
 query GetLaunches {
   launches {
-    mission_id
-    mission_name
+    ...Launches
   }
 }
