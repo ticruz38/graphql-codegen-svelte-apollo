@@ -1,11 +1,11 @@
 import client from "src/apollo-client";
-import { gql, ApolloQueryResult,ObservableSubscription, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, QueryOptions as ApolloQueryOptions, MutationOptions as ApolloMutationOptions, SubscriptionOptions as ApolloSubScriptionOptions } from "@apollo/client/core";
-import { readable, Readable, get } from "svelte/store";
+import { gql, ApolloQueryResult, ObservableSubscription, Observable, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, QueryOptions as ApolloQueryOptions, MutationOptions as ApolloMutationOptions, SubscriptionOptions as ApolloSubScriptionOptions } from "@apollo/client/core";
+import { readable, Readable } from "svelte/store";
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 
 export interface SvelteQueryOptions<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,"query">{
-  skip?: Readable<boolean>;
+  skip?: Readable<boolean> | Observable<boolean>;
 }
 
 export interface SvelteQueryResult<TVariables,TData> extends ApolloQueryResult<TData>{
@@ -21,6 +21,17 @@ export type SvelteMutationOptions<TData,TVariables> = Omit<ApolloMutationOptions
 export type SvelteSubscriptionOptions<TVariables,TData> = Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">;
 
 const alwaysRun = readable(false,() => {/* Noop */});
+export const getCurrent = <T>(value: Readable<T>|Observable<T>) => {
+  let current:T = undefined;
+  const unsubscribe = value.subscribe(x => current=x);
+  if(typeof unsubscribe === "function"){
+    unsubscribe();
+  }
+  else{
+    unsubscribe.unsubscribe();
+  }
+  return current;
+}
       
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -1522,7 +1533,7 @@ export const useGetCodegenUsersQuery = ({skip,...options}: SvelteQueryOptions<Ge
               query: GetCodegenUsersDocument,
               ...options,
             });
-            const initialState = { data: {} as GetCodegenUsersQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? get(skip): false };
+            const initialState = { data: {} as GetCodegenUsersQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
             const result = readable<SvelteQueryResult<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>>(
               initialState,
               (set) => {
@@ -1552,7 +1563,10 @@ export const useGetCodegenUsersQuery = ({skip,...options}: SvelteQueryOptions<Ge
                 });
                 return () => {
                   if(subscription) subscription.unsubscribe();
-                  unSubscribeSkip();
+                  if(typeof unSubscribeSkip === "function"){
+                    return unSubscribeSkip();
+                  }
+                  unSubscribeSkip.unsubscribe();
                 }
               }
             );
@@ -1571,7 +1585,7 @@ export const useGetLaunchesQuery = ({skip,...options}: SvelteQueryOptions<GetLau
               query: GetLaunchesDocument,
               ...options,
             });
-            const initialState = { data: {} as GetLaunchesQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? get(skip): false };
+            const initialState = { data: {} as GetLaunchesQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
             const result = readable<SvelteQueryResult<GetLaunchesQueryVariables,GetLaunchesQuery>>(
               initialState,
               (set) => {
@@ -1601,7 +1615,10 @@ export const useGetLaunchesQuery = ({skip,...options}: SvelteQueryOptions<GetLau
                 });
                 return () => {
                   if(subscription) subscription.unsubscribe();
-                  unSubscribeSkip();
+                  if(typeof unSubscribeSkip === "function"){
+                    return unSubscribeSkip();
+                  }
+                  unSubscribeSkip.unsubscribe();
                 }
               }
             );
@@ -1620,7 +1637,7 @@ export const useGetLaunchesWithArgsQuery = ({skip,...options}: SvelteQueryOption
               query: GetLaunchesWithArgsDocument,
               ...options,
             });
-            const initialState = { data: {} as GetLaunchesWithArgsQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? get(skip): false };
+            const initialState = { data: {} as GetLaunchesWithArgsQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
             const result = readable<SvelteQueryResult<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>>(
               initialState,
               (set) => {
@@ -1650,7 +1667,10 @@ export const useGetLaunchesWithArgsQuery = ({skip,...options}: SvelteQueryOption
                 });
                 return () => {
                   if(subscription) subscription.unsubscribe();
-                  unSubscribeSkip();
+                  if(typeof unSubscribeSkip === "function"){
+                    return unSubscribeSkip();
+                  }
+                  unSubscribeSkip.unsubscribe();
                 }
               }
             );

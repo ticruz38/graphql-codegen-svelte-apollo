@@ -115,7 +115,7 @@ module.exports = {
       const hasSubscription = operations.some((op) => op.operation == "subscription");
 
     const operationImport = `${
-      hasQuery? `ApolloQueryResult,ObservableSubscription, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, ${
+      hasQuery? `ApolloQueryResult, ObservableSubscription, Observable, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, ${
             asyncQuery ? "QueryOptions as ApolloQueryOptions, " : ""
           }`
         : ""
@@ -129,7 +129,7 @@ module.exports = {
     const imports = [
       `import client from "${clientPath}";`,
       `import { gql, ${operationImport} } from "@apollo/client/core";`,
-      `import { readable, Readable, get } from "svelte/store";`,
+      `import { readable, Readable } from "svelte/store";`,
     ];
 
 
@@ -137,7 +137,7 @@ module.exports = {
     if(hasQuery){
       interfaces.push(`
 export interface ${queryOptionsInterfaceName}<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,"query">{
-  skip?: Readable<boolean>;
+  skip?: Readable<boolean> | Observable<boolean>;
 }`);
 interfaces.push(`
 export interface ${queryResultInterfaceName}<TVariables,TData> extends ApolloQueryResult<TData>{
@@ -161,6 +161,17 @@ export type ${subscriptionOptionsInterfaceName}<TVariables,TData> = Omit<ApolloS
     if(hasQuery){
       extra.push(`
 const alwaysRun = readable(false,() => {/* Noop */});
+export const getCurrent = <T>(value: Readable<T>|Observable<T>) => {
+  let current:T = undefined;
+  const unsubscribe = value.subscribe(x => current=x);
+  if(typeof unsubscribe === "function"){
+    unsubscribe();
+  }
+  else{
+    unsubscribe.unsubscribe();
+  }
+  return current;
+}
       `)
     }
 
@@ -183,7 +194,7 @@ const alwaysRun = readable(false,() => {/* Noop */});
               query: ${documentVariableName},
               ...options,
             });
-            const initialState = { data: {} as ${op}, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? get(skip): false };
+            const initialState = { data: {} as ${op}, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
             const result = readable<${queryResultInterfaceName}<${opv},${op}>>(
               initialState,
               (set) => {
@@ -213,7 +224,10 @@ const alwaysRun = readable(false,() => {/* Noop */});
                 });
                 return () => {
                   if(subscription) subscription.unsubscribe();
-                  unSubscribeSkip();
+                  if(typeof unSubscribeSkip === "function"){
+                    return unSubscribeSkip();
+                  }
+                  unSubscribeSkip.unsubscribe();
                 }
               }
             );

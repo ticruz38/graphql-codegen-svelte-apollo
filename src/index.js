@@ -75,17 +75,17 @@ module.exports = {
         var hasQuery = operations.some(function (op) { return op.operation == "query"; });
         var hasMutation = operations.some(function (op) { return op.operation == "mutation"; });
         var hasSubscription = operations.some(function (op) { return op.operation == "subscription"; });
-        var operationImport = ("" + (hasQuery ? "ApolloQueryResult,ObservableSubscription, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, " + (asyncQuery ? "QueryOptions as ApolloQueryOptions, " : "")
+        var operationImport = ("" + (hasQuery ? "ApolloQueryResult, ObservableSubscription, Observable, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, " + (asyncQuery ? "QueryOptions as ApolloQueryOptions, " : "")
             : "") + (hasMutation ? "MutationOptions as ApolloMutationOptions, "
             : "") + (hasSubscription ? "SubscriptionOptions as ApolloSubScriptionOptions, " : "")).slice(0, -2);
         var imports = [
             "import client from \"" + clientPath + "\";",
             "import { gql, " + operationImport + " } from \"@apollo/client/core\";",
-            "import { readable, Readable, get } from \"svelte/store\";",
+            "import { readable, Readable } from \"svelte/store\";",
         ];
         var interfaces = [];
         if (hasQuery) {
-            interfaces.push("\nexport interface " + queryOptionsInterfaceName + "<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,\"query\">{\n  skip?: Readable<boolean>;\n}");
+            interfaces.push("\nexport interface " + queryOptionsInterfaceName + "<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,\"query\">{\n  skip?: Readable<boolean> | Observable<boolean>;\n}");
             interfaces.push("\nexport interface " + queryResultInterfaceName + "<TVariables,TData> extends ApolloQueryResult<TData>{\n  query: ApolloObservableQuery<\n    TData,\n    TVariables\n  >;\n  skipped: boolean;\n}");
         }
         if (hasMutation) {
@@ -96,7 +96,7 @@ module.exports = {
         }
         var extra = [];
         if (hasQuery) {
-            extra.push("\nconst alwaysRun = readable(false,() => {/* Noop */});\n      ");
+            extra.push("\nconst alwaysRun = readable(false,() => {/* Noop */});\nexport const getCurrent = <T>(value: Readable<T>|Observable<T>) => {\n  let current:T = undefined;\n  const unsubscribe = value.subscribe(x => current=x);\n  if(typeof unsubscribe === \"function\"){\n    unsubscribe();\n  }\n  else{\n    unsubscribe.unsubscribe();\n  }\n  return current;\n}\n      ");
         }
         var ops = operations
             .map(function (o) {
@@ -106,7 +106,7 @@ module.exports = {
             var functionName = getOperationFunctionName(o.name.value, o.operation);
             var operation;
             if (o.operation == "query") {
-                operation = "export const " + functionName + " = ({skip,...options}: " + queryOptionsInterfaceName + "<" + opv + "," + op + ">): Readable<\n            " + queryResultInterfaceName + "<" + opv + "," + op + ">\n          > => {\n            skip ??= alwaysRun;\n            const q = client.watchQuery<" + op + "," + opv + ">({\n              query: " + documentVariableName + ",\n              ...options,\n            });\n            const initialState = { data: {} as " + op + ", loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? get(skip): false };\n            const result = readable<" + queryResultInterfaceName + "<" + opv + "," + op + ">>(\n              initialState,\n              (set) => {\n                let subscription: ObservableSubscription; \n                const unSubscribeSkip = skip.subscribe(skip => {\n                  if(skip){\n                      if(subscription) subscription.unsubscribe();\n                      set({\n                        ...initialState,\n                        skipped: true\n                      });\n                      return;\n                  }\n                  subscription = q.subscribe({\n                    error: error => ({\n                      data: {} as " + op + ",\n                      loading: false,\n                      error,\n                      networkStatus: 8,\n                      query: q,\n                      skipped: false\n                    }),\n                    next: (v) => {\n                      set({ ...v, query: q, skipped: false });\n                    }\n                  });\n                });\n                return () => {\n                  if(subscription) subscription.unsubscribe();\n                  unSubscribeSkip();\n                }\n              }\n            );\n            return result;\n          }\n        ";
+                operation = "export const " + functionName + " = ({skip,...options}: " + queryOptionsInterfaceName + "<" + opv + "," + op + ">): Readable<\n            " + queryResultInterfaceName + "<" + opv + "," + op + ">\n          > => {\n            skip ??= alwaysRun;\n            const q = client.watchQuery<" + op + "," + opv + ">({\n              query: " + documentVariableName + ",\n              ...options,\n            });\n            const initialState = { data: {} as " + op + ", loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };\n            const result = readable<" + queryResultInterfaceName + "<" + opv + "," + op + ">>(\n              initialState,\n              (set) => {\n                let subscription: ObservableSubscription; \n                const unSubscribeSkip = skip.subscribe(skip => {\n                  if(skip){\n                      if(subscription) subscription.unsubscribe();\n                      set({\n                        ...initialState,\n                        skipped: true\n                      });\n                      return;\n                  }\n                  subscription = q.subscribe({\n                    error: error => ({\n                      data: {} as " + op + ",\n                      loading: false,\n                      error,\n                      networkStatus: 8,\n                      query: q,\n                      skipped: false\n                    }),\n                    next: (v) => {\n                      set({ ...v, query: q, skipped: false });\n                    }\n                  });\n                });\n                return () => {\n                  if(subscription) subscription.unsubscribe();\n                  if(typeof unSubscribeSkip === \"function\"){\n                    return unSubscribeSkip();\n                  }\n                  unSubscribeSkip.unsubscribe();\n                }\n              }\n            );\n            return result;\n          }\n        ";
                 if (asyncQuery) {
                     var asyncOperationFunctionName = getAsyncOperationFunctionName(functionName);
                     operation =
