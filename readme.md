@@ -194,3 +194,25 @@ In you application code, you can import it from the generated file, and use the 
   {/await}
 </ul>
 ```
+
+### Advanced code generation options
+
+This plugin allows configuration of the generated names using the config `codegen` config section
+
+```yaml
+queryOperationPrefix: 'use' # Defaults to ''
+queryOperationSuffix: 'Query' # Defaults to ''
+fragmentVariableSuffix: 'Fragment' # Defaults to ''
+documentVariableSuffix: 'Document' # Defaults to 'Doc' 
+mutationOperationPrefix: 'use'  # Defaults to ''
+mutationOperationSuffix:  'Mutation' # Defaults to ''
+subscriptionOperationPrefix: 'use' # Defaults to ''
+subscriptionOperationSuffix: 'Subscription' # Defaults to ''
+asyncPrefix: 'use'  # Defaults to 'Async'
+asyncSuffix: 'Async' # Defaults to ''
+queryOptionsInterfaceName: 'SvelteQueryOptions' # Defaults to 'SvelteQueryOptions'
+queryResultInterfaceName: '' # Defaults to 'SvelteQueryResult'
+subscriptionOptionsInterfaceName: 'SvelteSubscriptionOptions' # Defaults to 'SvelteSubscriptionOptions'
+mutationOptionsInterfaceName: 'SvelteMutationOptions' # Defaults to 'SvelteMutationOptions'
+```
+All options in [RawClientSideBasePluginConfig](https://github.com/dotansimha/graphql-code-generator/blob/9fce7976d1af894aabcfd9b779551ae3bcd10093/packages/plugins/other/visitor-plugin-common/src/client-side-base-visitor.ts#L33) are supported as well. 
