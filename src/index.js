@@ -85,7 +85,7 @@ module.exports = {
         ];
         var interfaces = [];
         if (hasQuery) {
-            interfaces.push("\nexport interface " + queryOptionsInterfaceName + "<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,\"query\">{\n  skip?: Readable<boolean> | Observable<boolean>;\n}");
+            interfaces.push("\nexport interface " + queryOptionsInterfaceName + "<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,\"query\">{\n  skip?: Readable<boolean> | Pick<Observable<boolean>,\"subscribe\">;\n}");
             interfaces.push("\nexport interface " + queryResultInterfaceName + "<TVariables,TData> extends ApolloQueryResult<TData>{\n  query: ApolloObservableQuery<\n    TData,\n    TVariables\n  >;\n  skipped: boolean;\n}");
         }
         if (hasMutation) {
@@ -96,7 +96,7 @@ module.exports = {
         }
         var extra = [];
         if (hasQuery) {
-            extra.push("\nconst alwaysRun = readable(false,() => {/* Noop */});\nexport const getCurrent = <T>(value: Readable<T>|Observable<T>) => {\n  let current:T = undefined;\n  const unsubscribe = value.subscribe(x => current=x);\n  if(typeof unsubscribe === \"function\"){\n    unsubscribe();\n  }\n  else{\n    unsubscribe.unsubscribe();\n  }\n  return current;\n}\n      ");
+            extra.push("\nconst alwaysRun = readable(false,() => {/* Noop */});\nexport const getCurrent = <T>(value: Readable<T>|Pick<Observable<T>,\"subscribe\">) => {\n  let current:T = undefined;\n  const unsubscribe = value.subscribe(x => current=x);\n  if(typeof unsubscribe === \"function\"){\n    unsubscribe();\n  }\n  else{\n    unsubscribe.unsubscribe();\n  }\n  return current;\n}\n      ");
         }
         var ops = operations
             .map(function (o) {

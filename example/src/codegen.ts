@@ -5,7 +5,7 @@ export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 
 export interface SvelteQueryOptions<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,"query">{
-  skip?: Readable<boolean> | Observable<boolean>;
+  skip?: Readable<boolean> | Pick<Observable<boolean>,"subscribe">;
 }
 
 export interface SvelteQueryResult<TVariables,TData> extends ApolloQueryResult<TData>{
@@ -21,7 +21,7 @@ export type SvelteMutationOptions<TData,TVariables> = Omit<ApolloMutationOptions
 export type SvelteSubscriptionOptions<TVariables,TData> = Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">;
 
 const alwaysRun = readable(false,() => {/* Noop */});
-export const getCurrent = <T>(value: Readable<T>|Observable<T>) => {
+export const getCurrent = <T>(value: Readable<T>|Pick<Observable<T>,"subscribe">) => {
   let current:T = undefined;
   const unsubscribe = value.subscribe(x => current=x);
   if(typeof unsubscribe === "function"){

@@ -137,7 +137,7 @@ module.exports = {
     if(hasQuery){
       interfaces.push(`
 export interface ${queryOptionsInterfaceName}<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,"query">{
-  skip?: Readable<boolean> | Observable<boolean>;
+  skip?: Readable<boolean> | Pick<Observable<boolean>,"subscribe">;
 }`);
 interfaces.push(`
 export interface ${queryResultInterfaceName}<TVariables,TData> extends ApolloQueryResult<TData>{
@@ -161,7 +161,7 @@ export type ${subscriptionOptionsInterfaceName}<TVariables,TData> = Omit<ApolloS
     if(hasQuery){
       extra.push(`
 const alwaysRun = readable(false,() => {/* Noop */});
-export const getCurrent = <T>(value: Readable<T>|Observable<T>) => {
+export const getCurrent = <T>(value: Readable<T>|Pick<Observable<T>,"subscribe">) => {
   let current:T = undefined;
   const unsubscribe = value.subscribe(x => current=x);
   if(typeof unsubscribe === "function"){
