@@ -128,8 +128,10 @@ module.exports = {
 
     const imports = [
       `import client from "${clientPath}";`,
-      `import { gql, ${operationImport} } from "@apollo/client/core";`,
-      `import { readable, Readable } from "svelte/store";`,
+      `import { gql } from "@apollo/client/core";`,
+      `import type { ${operationImport} } from "@apollo/client/core";`,
+      `import { readable } from "svelte/store";`,
+      `import type { Readable } from "svelte/store";`,
     ];
 
 

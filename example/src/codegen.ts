@@ -1,6 +1,8 @@
 import client from "src/apollo-client";
-import { gql, ApolloQueryResult, ObservableSubscription, Observable, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, QueryOptions as ApolloQueryOptions, MutationOptions as ApolloMutationOptions, SubscriptionOptions as ApolloSubScriptionOptions } from "@apollo/client/core";
-import { readable, Readable } from "svelte/store";
+import { gql } from "@apollo/client/core";
+import type { ApolloQueryResult, ObservableSubscription, Observable, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, QueryOptions as ApolloQueryOptions, MutationOptions as ApolloMutationOptions, SubscriptionOptions as ApolloSubScriptionOptions } from "@apollo/client/core";
+import { readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 
