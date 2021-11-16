@@ -16,11 +16,11 @@ export interface SvelteQueryResult<TVariables,TData> extends ApolloQueryResult<T
   skipped: boolean;
 }
 
-export interface SvelteMutationOptions<TData,TVariables> extends Omit<ApolloMutationOptions<TData,TVariables>,"mutation">{ }
+export type SvelteMutationOptions<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;
 
-export interface SvelteSubscriptionOptions<TVariables,TData> extends Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">{ }
+export type SvelteSubscriptionOptions<TVariables,TData> = Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">;
 
-const alwaysRun = readable(false,() => {});
+const alwaysRun = readable(false,() => {/* Noop */});
       
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -1542,10 +1542,11 @@ export const useGetCodegenUsersQuery = ({skip,...options}: SvelteQueryOptions<Ge
                       loading: false,
                       error,
                       networkStatus: 8,
-                      query: q
+                      query: q,
+                      skipped: false
                     }),
                     next: (v) => {
-                      set({ ...v, query: q });
+                      set({ ...v, query: q, skipped: false });
                     }
                   });
                 });
@@ -1590,10 +1591,11 @@ export const useGetLaunchesQuery = ({skip,...options}: SvelteQueryOptions<GetLau
                       loading: false,
                       error,
                       networkStatus: 8,
-                      query: q
+                      query: q,
+                      skipped: false
                     }),
                     next: (v) => {
-                      set({ ...v, query: q });
+                      set({ ...v, query: q, skipped: false });
                     }
                   });
                 });
@@ -1638,10 +1640,11 @@ export const useGetLaunchesWithArgsQuery = ({skip,...options}: SvelteQueryOption
                       loading: false,
                       error,
                       networkStatus: 8,
-                      query: q
+                      query: q,
+                      skipped: false
                     }),
                     next: (v) => {
-                      set({ ...v, query: q });
+                      set({ ...v, query: q, skipped: false });
                     }
                   });
                 });

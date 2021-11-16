@@ -150,17 +150,17 @@ export interface ${queryResultInterfaceName}<TVariables,TData> extends ApolloQue
     }
     if(hasMutation){
       interfaces.push(`
-export interface ${mutationOptionsInterfaceName}<TData,TVariables> extends Omit<ApolloMutationOptions<TData,TVariables>,"mutation">{ }`);
+export type ${mutationOptionsInterfaceName}<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;`);
     }
     if(hasSubscription){
       interfaces.push(`
-export interface ${subscriptionOptionsInterfaceName}<TVariables,TData> extends Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">{ }`);
+export type ${subscriptionOptionsInterfaceName}<TVariables,TData> = Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">;`);
     }
 
     const extra = [];
     if(hasQuery){
       extra.push(`
-const alwaysRun = readable(false,() => {});
+const alwaysRun = readable(false,() => {/* Noop */});
       `)
     }
 
@@ -203,10 +203,11 @@ const alwaysRun = readable(false,() => {});
                       loading: false,
                       error,
                       networkStatus: 8,
-                      query: q
+                      query: q,
+                      skipped: false
                     }),
                     next: (v) => {
-                      set({ ...v, query: q });
+                      set({ ...v, query: q, skipped: false });
                     }
                   });
                 });
