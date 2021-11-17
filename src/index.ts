@@ -125,7 +125,7 @@ module.exports = {
       const hasSubscription = operations.some((op) => op.operation == "subscription");
 
     const operationImport = `${
-      hasQuery? `ApolloQueryResult, ObservableSubscription, Observable, WatchQueryOptions as ApolloWatchQueryOptions, ${
+      hasQuery? `ApolloQueryResult, ObservableSubscription, WatchQueryOptions as ApolloWatchQueryOptions, ${
             asyncQuery ? "QueryOptions as ApolloQueryOptions, " : ""
           }`
         : ""
@@ -181,7 +181,7 @@ export interface ${subscriptionResultInterfaceName}<TVariables,TData> extends Fe
     const extra = [];
     if(includeRxStoreUtils){
       imports.push(`
-import { BehaviorSubject } from "rxjs";      
+import { BehaviorSubject, Observable } from "rxjs";      
       `.trim());
       extra.push(`
 export const toReadable = <T>(initialValue?: T) => (observable: Pick<Observable<T>,"subscribe">) => 

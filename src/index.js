@@ -75,7 +75,7 @@ module.exports = {
         var hasQuery = operations.some(function (op) { return op.operation == "query"; });
         var hasMutation = operations.some(function (op) { return op.operation == "mutation"; });
         var hasSubscription = operations.some(function (op) { return op.operation == "subscription"; });
-        var operationImport = ("" + (hasQuery ? "ApolloQueryResult, ObservableSubscription, Observable, WatchQueryOptions as ApolloWatchQueryOptions, " + (asyncQuery ? "QueryOptions as ApolloQueryOptions, " : "")
+        var operationImport = ("" + (hasQuery ? "ApolloQueryResult, ObservableSubscription, WatchQueryOptions as ApolloWatchQueryOptions, " + (asyncQuery ? "QueryOptions as ApolloQueryOptions, " : "")
             : "") + (hasMutation ? "MutationOptions as ApolloMutationOptions, "
             : "") + (hasSubscription ? "SubscriptionOptions as ApolloSubScriptionOptions, " : "")).slice(0, -2);
         var importFetchResult = hasMutation || hasSubscription ? ', FetchResult' : '';
@@ -98,7 +98,7 @@ module.exports = {
         }
         var extra = [];
         if (includeRxStoreUtils) {
-            imports.push("\nimport { BehaviorSubject } from \"rxjs\";      \n      ".trim());
+            imports.push("\nimport { BehaviorSubject, Observable } from \"rxjs\";      \n      ".trim());
             extra.push("\nexport const toReadable = <T>(initialValue?: T) => (observable: Pick<Observable<T>,\"subscribe\">) => \n    readable<T>(initialValue,set => {\n      const subscription = observable.subscribe(set);\n      return () => subscription.unsubscribe();\n    });\n\nexport class RxWriteable<T> extends BehaviorSubject<T>{\n    set(value:T):void {\n        super.next(value)\n    }\n    update(fn: (value: T)=> T){\n        this.set(fn(this.getValue()));\n    }\n};\nexport const createRxWriteable = <T>(initialValue:T) => {\n  return new RxWriteable<T>(initialValue);\n}\n      ".trim());
         }
         var ops = operations
