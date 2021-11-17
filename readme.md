@@ -213,6 +213,72 @@ asyncSuffix: 'Async' # Defaults to ''
 queryOptionsInterfaceName: 'SvelteQueryOptions' # Defaults to 'SvelteQueryOptions'
 queryResultInterfaceName: '' # Defaults to 'SvelteQueryResult'
 subscriptionOptionsInterfaceName: 'SvelteSubscriptionOptions' # Defaults to 'SvelteSubscriptionOptions'
+subscriptionResultInterfaceName: 'SvelteSubscriptionResult' # Defaults to 'SvelteSubscriptionResult'
 mutationOptionsInterfaceName: 'SvelteMutationOptions' # Defaults to 'SvelteMutationOptions'
+mutationResultInterfaceName: 'SvelteMutationResult' # Defaults to 'SvelteMutationResult'
+includeRxStoreUtils: true # Defaults to false
 ```
 All options in [RawClientSideBasePluginConfig](https://github.com/dotansimha/graphql-code-generator/blob/9fce7976d1af894aabcfd9b779551ae3bcd10093/packages/plugins/other/visitor-plugin-common/src/client-side-base-visitor.ts#L33) are supported as well. 
+
+
+### RxStoreUtils 
+
+The generator can add two helper functions to convert `Observables` to `Readable` or to create an `Observable` compatible `Writeable`.
+These functions depend on `rxjs`, so make sure it is installed: 
+
+```sh
+npm add rxjs
+``` 
+
+#### toReadable
+
+This will convert an rxjs observable to a readable. 
+```svelte
+<script>
+import {from,timer} from "rxjs"
+import {toReadable} from "$lib/generated" // Reference to your generated file
+const readable = timer(1000)
+  .pipe(toReadable());
+
+</script>
+{$readable}
+```
+
+#### createRxWriteable 
+
+Allows you to generated a binable observable
+```svelte
+<script>
+import {debounceTime,map,startsWith,filter} from "rxjs"
+import {createRxWriteable,useCheckUserNameQuery} from "$lib/generated" // Reference to your generated file
+import {derived} from "svelte/store"
+const username = createRxWriteable('');
+
+const checkUsername = username.pipe(
+  debounceTime(1500),
+  filter(x => !!x),
+  startsWith('')
+);
+
+const shouldSkip = checkUsername.pipe(
+  map(x => !x)
+);
+
+const response = useCheckUserNameQuery(derived(
+  checkUsername,
+  shouldSkip,
+  (username,skip) => ({
+    variables: {
+      username
+    },
+    skip
+  })
+));
+$: console.log({
+  response: $response
+})
+
+</script>
+<input bind:value={$username}>
+
+```

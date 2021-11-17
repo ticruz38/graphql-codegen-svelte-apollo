@@ -15,16 +15,23 @@ const visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
 export interface Config extends RawClientSideBasePluginConfig {
   clientPath: string;
   asyncQuery?: boolean;
+  includeRxStoreUtils?: boolean;
   queryOperationPrefix?: string;
   queryOperationSuffix?: string;
   mutationOperationPrefix?: string;
   mutationOperationSuffix?: string;
   mutationOptionsInterfaceName?: string;
+  mutationResultInterfaceName?: string;
+
   subscriptionOperationPrefix?: string;
   subscriptionOperationSuffix?: string;
+  
   subscriptionOptionsInterfaceName?: string;
+  subscriptionResultInterfaceName?: string;
+  
   asyncPrefix?: string;
   asyncSuffix?: string;
+  
   queryOptionsInterfaceName?: string;
   queryResultInterfaceName?: string;
 }
@@ -33,6 +40,7 @@ module.exports = {
   plugin: (schema, documents, {
     asyncQuery =false,
     clientPath,
+    includeRxStoreUtils = false,
     queryOperationPrefix= '',
     queryOperationSuffix = '',
     mutationOperationPrefix = '',
@@ -43,9 +51,11 @@ module.exports = {
     asyncPrefix = "Async",
     asyncSuffix = '',
     queryOptionsInterfaceName = 'SvelteQueryOptions',
-    subscriptionOptionsInterfaceName = 'SvelteSubscriptionOptions',
-    mutationOptionsInterfaceName = 'SvelteMutationOptions',
     queryResultInterfaceName = 'SvelteQueryResult',
+    subscriptionOptionsInterfaceName = 'SvelteSubscriptionOptions',
+    subscriptionResultInterfaceName = 'SvelteSubscriptionResult',
+    mutationOptionsInterfaceName = 'SvelteMutationOptions',
+    mutationResultInterfaceName = 'SvelteMutationResult',
     ...config
   }: Config  , info) => {
     const operationTypeFormats = {
@@ -115,7 +125,7 @@ module.exports = {
       const hasSubscription = operations.some((op) => op.operation == "subscription");
 
     const operationImport = `${
-      hasQuery? `ApolloQueryResult, ObservableSubscription, Observable, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, ${
+      hasQuery? `ApolloQueryResult, ObservableSubscription, Observable, WatchQueryOptions as ApolloWatchQueryOptions, ${
             asyncQuery ? "QueryOptions as ApolloQueryOptions, " : ""
           }`
         : ""
@@ -126,10 +136,11 @@ module.exports = {
       hasSubscription? "SubscriptionOptions as ApolloSubScriptionOptions, ": ""
     }`.slice(0, -2);
 
+    const importFetchResult = hasMutation || hasSubscription? ', FetchResult':'';
     const imports = [
       `import client from "${clientPath}";`,
       `import { gql } from "@apollo/client/core";`,
-      `import type { ${operationImport} } from "@apollo/client/core";`,
+      `import type { ${operationImport}${importFetchResult} } from "@apollo/client/core";`,
       `import { readable } from "svelte/store";`,
       `import type { Readable } from "svelte/store";`,
     ];
@@ -139,42 +150,58 @@ module.exports = {
     if(hasQuery){
       interfaces.push(`
 export interface ${queryOptionsInterfaceName}<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,"query">{
-  skip?: Readable<boolean> | Pick<Observable<boolean>,"subscribe">;
-}`);
-interfaces.push(`
+  skip?: boolean;
+}
 export interface ${queryResultInterfaceName}<TVariables,TData> extends ApolloQueryResult<TData>{
-  query: ApolloObservableQuery<
-    TData,
-    TVariables
-  >;
-  skipped: boolean;
-}`);
+  options?: ApolloWatchQueryOptions<TVariables,TData>;
+  skipped?: true;
+}
+`);
     }
     if(hasMutation){
       interfaces.push(`
-export type ${mutationOptionsInterfaceName}<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;`);
+export type ${mutationOptionsInterfaceName}<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;
+export interface ${mutationResultInterfaceName}<TData,TVariables> extends FetchResult<TData>{
+  error?: Error;
+  options?: ApolloMutationOptions<TData,TVariables>;
+};
+`);
+
     }
     if(hasSubscription){
       interfaces.push(`
-export type ${subscriptionOptionsInterfaceName}<TVariables,TData> = Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">;`);
+export type ${subscriptionOptionsInterfaceName}<TVariables,TData> = Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">;
+export interface ${subscriptionResultInterfaceName}<TVariables,TData> extends FetchResult<TData>{
+  error?: Error;
+  options?: ApolloSubScriptionOptions<TVariables,TData>;
+};
+`.trim());
     }
 
     const extra = [];
-    if(hasQuery){
+    if(includeRxStoreUtils){
+      imports.push(`
+import { BehaviorSubject } from "rxjs";      
+      `.trim());
       extra.push(`
-const alwaysRun = readable(false,() => {/* Noop */});
-export const getCurrent = <T>(value: Readable<T>|Pick<Observable<T>,"subscribe">) => {
-  let current:T = undefined;
-  const unsubscribe = value.subscribe(x => current=x);
-  if(typeof unsubscribe === "function"){
-    unsubscribe();
-  }
-  else{
-    unsubscribe.unsubscribe();
-  }
-  return current;
+export const toReadable = <T>(initialValue?: T) => (observable: Pick<Observable<T>,"subscribe">) => 
+    readable<T>(initialValue,set => {
+      const subscription = observable.subscribe(set);
+      return () => subscription.unsubscribe();
+    });
+
+export class RxWriteable<T> extends BehaviorSubject<T>{
+    set(value:T):void {
+        super.next(value)
+    }
+    update(fn: (value: T)=> T){
+        this.set(fn(this.getValue()));
+    }
+};
+export const createRxWriteable = <T>(initialValue:T) => {
+  return new RxWriteable<T>(initialValue);
 }
-      `)
+      `.trim())
     }
 
 
@@ -187,55 +214,48 @@ export const getCurrent = <T>(value: Readable<T>|Pick<Observable<T>,"subscribe">
 
         let operation;
         if (o.operation == "query") {
+          operation = `
+export const ${functionName} = (rxOptions: Readable<${queryOptionsInterfaceName}<${opv},${op}>>,initialValue?:${queryResultInterfaceName}<${opv},${op}>): Readable<${queryResultInterfaceName}<${opv},${op}>> => {
+  initialValue ??= { data: {} as ${op}, loading: true, error: undefined, networkStatus: 1 };
+  return readable<${queryResultInterfaceName}<${opv},${op}>>(
+    initialValue,
+    (set) => {
+      let subscription: ObservableSubscription;
+      const unsubscribe = rxOptions.subscribe(({skip,...options}) => {
+        const queryOptions = {
+          ...options,
+          query: ${documentVariableName},
+        }
+        if(skip){
+          if(subscription) {
+            subscription.unsubscribe();
+            subscription = undefined;
+          }; 
+          return set({
+            ...initialValue,
+            skipped: true,
+            options: queryOptions
+          });
+        }
 
-          operation = `export const ${functionName} = ({skip,...options}: ${queryOptionsInterfaceName}<${opv},${op}>): Readable<
-            ${queryResultInterfaceName}<${opv},${op}>
-          > => {
-            skip ??= alwaysRun;
-            const q = client.watchQuery<${op},${opv}>({
-              query: ${documentVariableName},
-              ...options,
-            });
-            const initialState = { data: {} as ${op}, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
-            const result = readable<${queryResultInterfaceName}<${opv},${op}>>(
-              initialState,
-              (set) => {
-                let subscription: ObservableSubscription; 
-                const unSubscribeSkip = skip.subscribe(skip => {
-                  if(skip){
-                      if(subscription) subscription.unsubscribe();
-                      set({
-                        ...initialState,
-                        skipped: true
-                      });
-                      return;
-                  }
-                  subscription = q.subscribe({
-                    error: error => ({
-                      data: {} as ${op},
-                      loading: false,
-                      error,
-                      networkStatus: 8,
-                      query: q,
-                      skipped: false
-                    }),
-                    next: (v) => {
-                      set({ ...v, query: q, skipped: false });
-                    }
-                  });
-                });
-                return () => {
-                  if(subscription) subscription.unsubscribe();
-                  if(typeof unSubscribeSkip === "function"){
-                    return unSubscribeSkip();
-                  }
-                  unSubscribeSkip.unsubscribe();
-                }
-              }
-            );
-            return result;
-          }
-        `;
+        subscription = client.watchQuery<${op},${opv}>(queryOptions).subscribe({
+          error: error => ({
+            data: {} as ${op},
+            loading: false,
+            error,
+            networkStatus: 8,
+            options: queryOptions
+          }),
+          next: (response) => set({ ...response, options: queryOptions })
+        });
+      });
+      return () => {
+        if(subscription) subscription.unsubscribe();
+        unsubscribe();
+      }
+    }
+  );
+}`;
           if (asyncQuery) {
             const asyncOperationFunctionName = getAsyncOperationFunctionName(functionName);
             operation =
@@ -248,28 +268,65 @@ export const getCurrent = <T>(value: Readable<T>|Pick<Observable<T>,"subscribe">
           }
         }
         if (o.operation == "mutation") {
-          operation = `export const ${functionName} = (
-            options: ${mutationOptionsInterfaceName}<${op},${opv}>
-          ) => {
-            const m = client.mutate<${op}, ${opv}>({
-              mutation: ${documentVariableName},
-              ...options,
-            });
-            return m;
-          }`;
+          operation = `
+export const ${functionName} = (rxOptions: Readable<${mutationOptionsInterfaceName}<${op},${opv}>>,initialValue?:${mutationResultInterfaceName}<${op},${opv}>): Readable<${mutationResultInterfaceName}<${op},${opv}>> =>
+  readable<${mutationResultInterfaceName}<${op},${opv}>>(initialValue,set => {
+    let stopped = false;
+    const unsubscribe = rxOptions.subscribe(options => {
+      const mutateOptions = {
+        mutation: ${documentVariableName},
+        ...options,
+      };
+      client.mutate<${op}, ${opv}>(mutateOptions).then(x =>{
+        if(stopped) return;
+        set({
+          ...x,
+          options: mutateOptions
+        });
+      }).catch(error => {
+        set({
+          error,
+          options: mutateOptions
+        })
+      });
+    });
+    return function stop(){
+      stopped = true;  
+      unsubscribe();
+    }
+})`;
         }
         if (o.operation == "subscription") {
-          operation = `export const ${functionName} = (
-            options: ${subscriptionOptionsInterfaceName}<${opv},${op}>
-          ) => {
-            const q = client.subscribe<${op}, ${opv}>(
-              {
-                query: ${documentVariableName},
-                ...options,
-              }
-            )
-            return q;
-          }`;
+          operation = `
+export const ${functionName} = (rxOptions: Readable<${subscriptionOptionsInterfaceName}<${opv},${op}>>,initialValue?:${subscriptionResultInterfaceName}<${opv},${op}>): Readable<${subscriptionResultInterfaceName}<${opv},${op}>> => 
+  readable<${subscriptionResultInterfaceName}<${opv},${op}>>(initialValue,set => {
+    let subscription: ObservableSubscription;
+    const unsubscribe = rxOptions.subscribe(options => {
+        const subscriptionOptions = {
+          ...options,
+          query: ${documentVariableName},
+        };
+        if(subscription){
+          subscription.unsubscribe();
+          subscription = undefined;
+        }
+        subscription = client.subscribe<${op}, ${opv}>(subscriptionOptions).subscribe({
+          error: error => set({
+            error,
+            options: subscriptionOptions
+          }),
+          next: r => set({
+            ...r,
+            options: subscriptionOptions
+          })
+        });
+      });
+      return function stop(){
+        if(subscription) subscription.unsubscribe();
+        unsubscribe();
+      }
+  })
+`;
         }
         return operation;
       })

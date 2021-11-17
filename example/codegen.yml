@@ -14,6 +14,7 @@ generates:
     config:
       clientPath: 'src/apollo-client'
       asyncQuery: true
+      includeRxStoreUtils: true
       queryOperationPrefix: 'use'      
       queryOperationSuffix: 'Query'      
       fragmentVariableSuffix: 'Fragment'

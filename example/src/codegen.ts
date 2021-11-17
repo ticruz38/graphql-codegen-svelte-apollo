@@ -1,40 +1,49 @@
 import client from "src/apollo-client";
 import { gql } from "@apollo/client/core";
-import type { ApolloQueryResult, ObservableSubscription, Observable, ObservableQuery as ApolloObservableQuery, WatchQueryOptions as ApolloWatchQueryOptions, QueryOptions as ApolloQueryOptions, MutationOptions as ApolloMutationOptions, SubscriptionOptions as ApolloSubScriptionOptions } from "@apollo/client/core";
+import type { ApolloQueryResult, ObservableSubscription, Observable, WatchQueryOptions as ApolloWatchQueryOptions, QueryOptions as ApolloQueryOptions, MutationOptions as ApolloMutationOptions, SubscriptionOptions as ApolloSubScriptionOptions, FetchResult } from "@apollo/client/core";
 import { readable } from "svelte/store";
 import type { Readable } from "svelte/store";
+import { BehaviorSubject } from "rxjs";
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 
 export interface SvelteQueryOptions<TVariables,TData> extends Omit<ApolloWatchQueryOptions<TVariables,TData>,"query">{
-  skip?: Readable<boolean> | Pick<Observable<boolean>,"subscribe">;
+  skip?: boolean;
+}
+export interface SvelteQueryResult<TVariables,TData> extends ApolloQueryResult<TData>{
+  options?: ApolloWatchQueryOptions<TVariables,TData>;
+  skipped?: true;
 }
 
-export interface SvelteQueryResult<TVariables,TData> extends ApolloQueryResult<TData>{
-  query: ApolloObservableQuery<
-    TData,
-    TVariables
-  >;
-  skipped: boolean;
-}
 
 export type SvelteMutationOptions<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;
+export interface SvelteMutationResult<TData,TVariables> extends FetchResult<TData>{
+  error?: Error;
+  options?: ApolloMutationOptions<TData,TVariables>;
+};
 
 export type SvelteSubscriptionOptions<TVariables,TData> = Omit<ApolloSubScriptionOptions<TVariables,TData>,"query">;
+export interface SvelteSubscriptionResult<TVariables,TData> extends FetchResult<TData>{
+  error?: Error;
+  options?: ApolloSubScriptionOptions<TVariables,TData>;
+};
+export const toReadable = <T>(initialValue?: T) => (observable: Pick<Observable<T>,"subscribe">) => 
+    readable<T>(initialValue,set => {
+      const subscription = observable.subscribe(set);
+      return () => subscription.unsubscribe();
+    });
 
-const alwaysRun = readable(false,() => {/* Noop */});
-export const getCurrent = <T>(value: Readable<T>|Pick<Observable<T>,"subscribe">) => {
-  let current:T = undefined;
-  const unsubscribe = value.subscribe(x => current=x);
-  if(typeof unsubscribe === "function"){
-    unsubscribe();
-  }
-  else{
-    unsubscribe.unsubscribe();
-  }
-  return current;
+export class RxWriteable<T> extends BehaviorSubject<T>{
+    set(value:T):void {
+        super.next(value)
+    }
+    update(fn: (value: T)=> T){
+        this.set(fn(this.getValue()));
+    }
+};
+export const createRxWriteable = <T>(initialValue:T) => {
+  return new RxWriteable<T>(initialValue);
 }
-      
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -1509,197 +1518,252 @@ export const InsertUsersAndPublishDocument = gql`
   }
 }
     `;
-export const AddCodegenUser = (
-            options: SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>
-          ) => {
-            const m = client.mutate<AddCodegenUserMutation, AddCodegenUserMutationVariables>({
-              mutation: AddCodegenUserDocument,
-              ...options,
-            });
-            return m;
-          }
-export const DeleteCodegenUser = (
-            options: SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>
-          ) => {
-            const m = client.mutate<DeleteCodegenUserMutation, DeleteCodegenUserMutationVariables>({
-              mutation: DeleteCodegenUserDocument,
-              ...options,
-            });
-            return m;
-          }
-export const useGetCodegenUsersQuery = ({skip,...options}: SvelteQueryOptions<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>): Readable<
-            SvelteQueryResult<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>
-          > => {
-            skip ??= alwaysRun;
-            const q = client.watchQuery<GetCodegenUsersQuery,GetCodegenUsersQueryVariables>({
-              query: GetCodegenUsersDocument,
-              ...options,
-            });
-            const initialState = { data: {} as GetCodegenUsersQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
-            const result = readable<SvelteQueryResult<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>>(
-              initialState,
-              (set) => {
-                let subscription: ObservableSubscription; 
-                const unSubscribeSkip = skip.subscribe(skip => {
-                  if(skip){
-                      if(subscription) subscription.unsubscribe();
-                      set({
-                        ...initialState,
-                        skipped: true
-                      });
-                      return;
-                  }
-                  subscription = q.subscribe({
-                    error: error => ({
-                      data: {} as GetCodegenUsersQuery,
-                      loading: false,
-                      error,
-                      networkStatus: 8,
-                      query: q,
-                      skipped: false
-                    }),
-                    next: (v) => {
-                      set({ ...v, query: q, skipped: false });
-                    }
-                  });
-                });
-                return () => {
-                  if(subscription) subscription.unsubscribe();
-                  if(typeof unSubscribeSkip === "function"){
-                    return unSubscribeSkip();
-                  }
-                  unSubscribeSkip.unsubscribe();
-                }
-              }
-            );
-            return result;
-          }
-        
+
+export const AddCodegenUser = (rxOptions: Readable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>,initialValue?:SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>): Readable<SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>> =>
+  readable<SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>>(initialValue,set => {
+    let stopped = false;
+    const unsubscribe = rxOptions.subscribe(options => {
+      const mutateOptions = {
+        mutation: AddCodegenUserDocument,
+        ...options,
+      };
+      client.mutate<AddCodegenUserMutation, AddCodegenUserMutationVariables>(mutateOptions).then(x =>{
+        if(stopped) return;
+        set({
+          ...x,
+          options: mutateOptions
+        });
+      }).catch(error => {
+        set({
+          error,
+          options: mutateOptions
+        })
+      });
+    });
+    return function stop(){
+      stopped = true;  
+      unsubscribe();
+    }
+})
+
+export const DeleteCodegenUser = (rxOptions: Readable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>,initialValue?:SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>): Readable<SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>> =>
+  readable<SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>(initialValue,set => {
+    let stopped = false;
+    const unsubscribe = rxOptions.subscribe(options => {
+      const mutateOptions = {
+        mutation: DeleteCodegenUserDocument,
+        ...options,
+      };
+      client.mutate<DeleteCodegenUserMutation, DeleteCodegenUserMutationVariables>(mutateOptions).then(x =>{
+        if(stopped) return;
+        set({
+          ...x,
+          options: mutateOptions
+        });
+      }).catch(error => {
+        set({
+          error,
+          options: mutateOptions
+        })
+      });
+    });
+    return function stop(){
+      stopped = true;  
+      unsubscribe();
+    }
+})
+
+export const useGetCodegenUsersQuery = (rxOptions: Readable<SvelteQueryOptions<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>>,initialValue?:SvelteQueryResult<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>): Readable<SvelteQueryResult<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>> => {
+  initialValue ??= { data: {} as GetCodegenUsersQuery, loading: true, error: undefined, networkStatus: 1 };
+  return readable<SvelteQueryResult<GetCodegenUsersQueryVariables,GetCodegenUsersQuery>>(
+    initialValue,
+    (set) => {
+      let subscription: ObservableSubscription;
+      const unsubscribe = rxOptions.subscribe(({skip,...options}) => {
+        const queryOptions = {
+          ...options,
+          query: GetCodegenUsersDocument,
+        }
+        if(skip){
+          if(subscription) {
+            subscription.unsubscribe();
+            subscription = undefined;
+          }; 
+          return set({
+            ...initialValue,
+            skipped: true,
+            options: queryOptions
+          });
+        }
+
+        subscription = client.watchQuery<GetCodegenUsersQuery,GetCodegenUsersQueryVariables>(queryOptions).subscribe({
+          error: error => ({
+            data: {} as GetCodegenUsersQuery,
+            loading: false,
+            error,
+            networkStatus: 8,
+            options: queryOptions
+          }),
+          next: (response) => set({ ...response, options: queryOptions })
+        });
+      });
+      return () => {
+        if(subscription) subscription.unsubscribe();
+        unsubscribe();
+      }
+    }
+  );
+}
               export const AsyncuseGetCodegenUsersQuery = (options: ApolloQueryOptions<GetCodegenUsersQueryVariables>) => {
                 return client.query<GetCodegenUsersQuery>({query: GetCodegenUsersDocument, ...options})
               }
             
-export const useGetLaunchesQuery = ({skip,...options}: SvelteQueryOptions<GetLaunchesQueryVariables,GetLaunchesQuery>): Readable<
-            SvelteQueryResult<GetLaunchesQueryVariables,GetLaunchesQuery>
-          > => {
-            skip ??= alwaysRun;
-            const q = client.watchQuery<GetLaunchesQuery,GetLaunchesQueryVariables>({
-              query: GetLaunchesDocument,
-              ...options,
-            });
-            const initialState = { data: {} as GetLaunchesQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
-            const result = readable<SvelteQueryResult<GetLaunchesQueryVariables,GetLaunchesQuery>>(
-              initialState,
-              (set) => {
-                let subscription: ObservableSubscription; 
-                const unSubscribeSkip = skip.subscribe(skip => {
-                  if(skip){
-                      if(subscription) subscription.unsubscribe();
-                      set({
-                        ...initialState,
-                        skipped: true
-                      });
-                      return;
-                  }
-                  subscription = q.subscribe({
-                    error: error => ({
-                      data: {} as GetLaunchesQuery,
-                      loading: false,
-                      error,
-                      networkStatus: 8,
-                      query: q,
-                      skipped: false
-                    }),
-                    next: (v) => {
-                      set({ ...v, query: q, skipped: false });
-                    }
-                  });
-                });
-                return () => {
-                  if(subscription) subscription.unsubscribe();
-                  if(typeof unSubscribeSkip === "function"){
-                    return unSubscribeSkip();
-                  }
-                  unSubscribeSkip.unsubscribe();
-                }
-              }
-            );
-            return result;
-          }
-        
+
+export const useGetLaunchesQuery = (rxOptions: Readable<SvelteQueryOptions<GetLaunchesQueryVariables,GetLaunchesQuery>>,initialValue?:SvelteQueryResult<GetLaunchesQueryVariables,GetLaunchesQuery>): Readable<SvelteQueryResult<GetLaunchesQueryVariables,GetLaunchesQuery>> => {
+  initialValue ??= { data: {} as GetLaunchesQuery, loading: true, error: undefined, networkStatus: 1 };
+  return readable<SvelteQueryResult<GetLaunchesQueryVariables,GetLaunchesQuery>>(
+    initialValue,
+    (set) => {
+      let subscription: ObservableSubscription;
+      const unsubscribe = rxOptions.subscribe(({skip,...options}) => {
+        const queryOptions = {
+          ...options,
+          query: GetLaunchesDocument,
+        }
+        if(skip){
+          if(subscription) {
+            subscription.unsubscribe();
+            subscription = undefined;
+          }; 
+          return set({
+            ...initialValue,
+            skipped: true,
+            options: queryOptions
+          });
+        }
+
+        subscription = client.watchQuery<GetLaunchesQuery,GetLaunchesQueryVariables>(queryOptions).subscribe({
+          error: error => ({
+            data: {} as GetLaunchesQuery,
+            loading: false,
+            error,
+            networkStatus: 8,
+            options: queryOptions
+          }),
+          next: (response) => set({ ...response, options: queryOptions })
+        });
+      });
+      return () => {
+        if(subscription) subscription.unsubscribe();
+        unsubscribe();
+      }
+    }
+  );
+}
               export const AsyncuseGetLaunchesQuery = (options: ApolloQueryOptions<GetLaunchesQueryVariables>) => {
                 return client.query<GetLaunchesQuery>({query: GetLaunchesDocument, ...options})
               }
             
-export const useGetLaunchesWithArgsQuery = ({skip,...options}: SvelteQueryOptions<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>): Readable<
-            SvelteQueryResult<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>
-          > => {
-            skip ??= alwaysRun;
-            const q = client.watchQuery<GetLaunchesWithArgsQuery,GetLaunchesWithArgsQueryVariables>({
-              query: GetLaunchesWithArgsDocument,
-              ...options,
-            });
-            const initialState = { data: {} as GetLaunchesWithArgsQuery, loading: true, error: undefined, networkStatus: 1, query: q, skipped: skip? getCurrent(skip): false };
-            const result = readable<SvelteQueryResult<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>>(
-              initialState,
-              (set) => {
-                let subscription: ObservableSubscription; 
-                const unSubscribeSkip = skip.subscribe(skip => {
-                  if(skip){
-                      if(subscription) subscription.unsubscribe();
-                      set({
-                        ...initialState,
-                        skipped: true
-                      });
-                      return;
-                  }
-                  subscription = q.subscribe({
-                    error: error => ({
-                      data: {} as GetLaunchesWithArgsQuery,
-                      loading: false,
-                      error,
-                      networkStatus: 8,
-                      query: q,
-                      skipped: false
-                    }),
-                    next: (v) => {
-                      set({ ...v, query: q, skipped: false });
-                    }
-                  });
-                });
-                return () => {
-                  if(subscription) subscription.unsubscribe();
-                  if(typeof unSubscribeSkip === "function"){
-                    return unSubscribeSkip();
-                  }
-                  unSubscribeSkip.unsubscribe();
-                }
-              }
-            );
-            return result;
-          }
-        
+
+export const useGetLaunchesWithArgsQuery = (rxOptions: Readable<SvelteQueryOptions<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>>,initialValue?:SvelteQueryResult<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>): Readable<SvelteQueryResult<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>> => {
+  initialValue ??= { data: {} as GetLaunchesWithArgsQuery, loading: true, error: undefined, networkStatus: 1 };
+  return readable<SvelteQueryResult<GetLaunchesWithArgsQueryVariables,GetLaunchesWithArgsQuery>>(
+    initialValue,
+    (set) => {
+      let subscription: ObservableSubscription;
+      const unsubscribe = rxOptions.subscribe(({skip,...options}) => {
+        const queryOptions = {
+          ...options,
+          query: GetLaunchesWithArgsDocument,
+        }
+        if(skip){
+          if(subscription) {
+            subscription.unsubscribe();
+            subscription = undefined;
+          }; 
+          return set({
+            ...initialValue,
+            skipped: true,
+            options: queryOptions
+          });
+        }
+
+        subscription = client.watchQuery<GetLaunchesWithArgsQuery,GetLaunchesWithArgsQueryVariables>(queryOptions).subscribe({
+          error: error => ({
+            data: {} as GetLaunchesWithArgsQuery,
+            loading: false,
+            error,
+            networkStatus: 8,
+            options: queryOptions
+          }),
+          next: (response) => set({ ...response, options: queryOptions })
+        });
+      });
+      return () => {
+        if(subscription) subscription.unsubscribe();
+        unsubscribe();
+      }
+    }
+  );
+}
               export const AsyncuseGetLaunchesWithArgsQuery = (options: ApolloQueryOptions<GetLaunchesWithArgsQueryVariables>) => {
                 return client.query<GetLaunchesWithArgsQuery>({query: GetLaunchesWithArgsDocument, ...options})
               }
             
-export const UsersAdded = (
-            options: SvelteSubscriptionOptions<UsersAddedSubscriptionVariables,UsersAddedSubscription>
-          ) => {
-            const q = client.subscribe<UsersAddedSubscription, UsersAddedSubscriptionVariables>(
-              {
-                query: UsersAddedDocument,
-                ...options,
-              }
-            )
-            return q;
-          }
-export const InsertUsersAndPublish = (
-            options: SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>
-          ) => {
-            const m = client.mutate<InsertUsersAndPublishMutation, InsertUsersAndPublishMutationVariables>({
-              mutation: InsertUsersAndPublishDocument,
-              ...options,
-            });
-            return m;
-          }
+
+export const UsersAdded = (rxOptions: Readable<SvelteSubscriptionOptions<UsersAddedSubscriptionVariables,UsersAddedSubscription>>,initialValue?:SvelteSubscriptionResult<UsersAddedSubscriptionVariables,UsersAddedSubscription>): Readable<SvelteSubscriptionResult<UsersAddedSubscriptionVariables,UsersAddedSubscription>> => 
+  readable<SvelteSubscriptionResult<UsersAddedSubscriptionVariables,UsersAddedSubscription>>(initialValue,set => {
+    let subscription: ObservableSubscription;
+    const unsubscribe = rxOptions.subscribe(options => {
+        const subscriptionOptions = {
+          ...options,
+          query: UsersAddedDocument,
+        };
+        if(subscription){
+          subscription.unsubscribe();
+          subscription = undefined;
+        }
+        subscription = client.subscribe<UsersAddedSubscription, UsersAddedSubscriptionVariables>(subscriptionOptions).subscribe({
+          error: error => set({
+            error,
+            options: subscriptionOptions
+          }),
+          next: r => set({
+            ...r,
+            options: subscriptionOptions
+          })
+        });
+      });
+      return function stop(){
+        if(subscription) subscription.unsubscribe();
+        unsubscribe();
+      }
+  })
+
+
+export const InsertUsersAndPublish = (rxOptions: Readable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>,initialValue?:SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>): Readable<SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>> =>
+  readable<SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>(initialValue,set => {
+    let stopped = false;
+    const unsubscribe = rxOptions.subscribe(options => {
+      const mutateOptions = {
+        mutation: InsertUsersAndPublishDocument,
+        ...options,
+      };
+      client.mutate<InsertUsersAndPublishMutation, InsertUsersAndPublishMutationVariables>(mutateOptions).then(x =>{
+        if(stopped) return;
+        set({
+          ...x,
+          options: mutateOptions
+        });
+      }).catch(error => {
+        set({
+          error,
+          options: mutateOptions
+        })
+      });
+    });
+    return function stop(){
+      stopped = true;  
+      unsubscribe();
+    }
+})
