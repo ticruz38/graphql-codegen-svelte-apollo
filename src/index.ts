@@ -1,6 +1,8 @@
 import { CodegenPlugin } from "@graphql-codegen/plugin-helpers";
-import { LoadedFragment } from "@graphql-codegen/visitor-plugin-common";
-import { camelCase } from "camel-case";
+import {
+  ClientSideBaseVisitor,
+  LoadedFragment,
+} from "@graphql-codegen/visitor-plugin-common";
 import {
   concatAST,
   FragmentDefinitionNode,
@@ -10,7 +12,7 @@ import {
 } from "graphql";
 import { pascalCase } from "pascal-case";
 
-const visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
+// const visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
 
 const operationMap = {
   query: "query",
@@ -36,14 +38,14 @@ module.exports = {
       ...(config.externalFragments || []),
     ];
 
-    const visitor = new visitorPluginCommon.ClientSideBaseVisitor(
+    const visitor = new ClientSideBaseVisitor(
       schema,
       allFragments,
       {},
       { documentVariableSuffix: "Doc" },
       documents
     );
-    const visitorResult = visit(allAst, { leave: visitor });
+    const visitorResult = visit(allAst, visitor);
 
     const operations = allAst.definitions.filter(
       (d) => d.kind === Kind.OPERATION_DEFINITION

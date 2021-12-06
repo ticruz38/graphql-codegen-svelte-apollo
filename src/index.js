@@ -9,9 +9,10 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 exports.__esModule = true;
+var visitor_plugin_common_1 = require("@graphql-codegen/visitor-plugin-common");
 var graphql_1 = require("graphql");
 var pascal_case_1 = require("pascal-case");
-var visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
+// const visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
 var operationMap = {
     query: "query",
     subscription: "subscribe",
@@ -26,44 +27,44 @@ module.exports = {
             onType: fragmentDef.typeCondition.name.value,
             isExternal: false
         }); }), true), (config.externalFragments || []), true);
-        var visitor = new visitorPluginCommon.ClientSideBaseVisitor(schema, allFragments, {}, { documentVariableSuffix: "Doc" }, documents);
-        var visitorResult = (0, graphql_1.visit)(allAst, { leave: visitor });
+        var visitor = new visitor_plugin_common_1.ClientSideBaseVisitor(schema, allFragments, {}, { documentVariableSuffix: "Doc" }, documents);
+        var visitorResult = (0, graphql_1.visit)(allAst, visitor);
         var operations = allAst.definitions.filter(function (d) { return d.kind === graphql_1.Kind.OPERATION_DEFINITION; });
-        var operationImport = ("" + (operations.some(function (op) { return op.operation == "query"; })
-            ? "ApolloQueryResult, ObservableQuery, WatchQueryOptions, " + (config.asyncQuery ? "QueryOptions, " : "")
-            : "") + (operations.some(function (op) { return op.operation == "mutation"; })
+        var operationImport = "".concat(operations.some(function (op) { return op.operation == "query"; })
+            ? "ApolloQueryResult, ObservableQuery, WatchQueryOptions, ".concat(config.asyncQuery ? "QueryOptions, " : "")
+            : "").concat(operations.some(function (op) { return op.operation == "mutation"; })
             ? "MutationOptions, "
-            : "") + (operations.some(function (op) { return op.operation == "subscription"; })
+            : "").concat(operations.some(function (op) { return op.operation == "subscription"; })
             ? "SubscriptionOptions, "
-            : "")).slice(0, -2);
+            : "").slice(0, -2);
         var imports = [
-            "import client from \"" + config.clientPath + "\";",
-            "import type {\n        " + operationImport + "\n      } from \"@apollo/client\";",
+            "import client from \"".concat(config.clientPath, "\";"),
+            "import type {\n        ".concat(operationImport, "\n      } from \"@apollo/client\";"),
             "import { readable } from \"svelte/store\";",
             "import type { Readable } from \"svelte/store\";",
             "import gql from \"graphql-tag\"",
         ];
         var ops = operations
             .map(function (o) {
-            var dsl = "export const " + o.name.value + "Doc = gql`" + documents.find(function (d) {
-                return d.rawSDL.includes(o.operation + " " + o.name.value);
-            }).rawSDL + "`";
-            var op = "" + (0, pascal_case_1.pascalCase)(o.name.value) + (0, pascal_case_1.pascalCase)(o.operation);
-            var opv = op + "Variables";
+            var dsl = "export const ".concat(o.name.value, "Doc = gql`").concat(documents.find(function (d) {
+                return d.rawSDL.includes("".concat(o.operation, " ").concat(o.name.value));
+            }).rawSDL, "`");
+            var op = "".concat((0, pascal_case_1.pascalCase)(o.name.value)).concat((0, pascal_case_1.pascalCase)(o.operation));
+            var opv = "".concat(op, "Variables");
             var operation;
             if (o.operation == "query") {
-                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              WatchQueryOptions<" + opv + ">, \n              \"query\"\n            >\n          ): Readable<\n            ApolloQueryResult<" + op + "> & {\n              query: ObservableQuery<\n                " + op + ",\n                " + opv + "\n              >;\n            }\n          > => {\n            const q = client.watchQuery({\n              query: " + (0, pascal_case_1.pascalCase)(o.name.value) + "Doc,\n              ...options,\n            });\n            var result = readable<\n              ApolloQueryResult<" + op + "> & {\n                query: ObservableQuery<\n                  " + op + ",\n                  " + opv + "\n                >;\n              }\n            >(\n              { data: {} as any, loading: true, error: undefined, networkStatus: 1, query: q },\n              (set) => {\n                q.subscribe((v: any) => {\n                  set({ ...v, query: q });\n                });\n              }\n            );\n            return result;\n          }\n        ";
+                operation = "export const ".concat(o.name.value, " = (\n            options: Omit<\n              WatchQueryOptions<").concat(opv, ">, \n              \"query\"\n            >\n          ): Readable<\n            ApolloQueryResult<").concat(op, "> & {\n              query: ObservableQuery<\n                ").concat(op, ",\n                ").concat(opv, "\n              >;\n            }\n          > => {\n            const q = client.watchQuery({\n              query: ").concat((0, pascal_case_1.pascalCase)(o.name.value), "Doc,\n              ...options,\n            });\n            var result = readable<\n              ApolloQueryResult<").concat(op, "> & {\n                query: ObservableQuery<\n                  ").concat(op, ",\n                  ").concat(opv, "\n                >;\n              }\n            >(\n              { data: {} as any, loading: true, error: undefined, networkStatus: 1, query: q },\n              (set) => {\n                q.subscribe((v: any) => {\n                  set({ ...v, query: q });\n                });\n              }\n            );\n            return result;\n          }\n        ");
                 if (config.asyncQuery) {
                     operation =
                         operation +
-                            ("\n              export const Async" + o.name.value + " = (\n                options: Omit<\n                  QueryOptions<" + opv + ">,\n                  \"query\"\n                >\n              ) => {\n                return client.query<" + op + ">({query: " + (0, pascal_case_1.pascalCase)(o.name.value) + "Doc, ...options})\n              }\n            ");
+                            "\n              export const Async".concat(o.name.value, " = (\n                options: Omit<\n                  QueryOptions<").concat(opv, ">,\n                  \"query\"\n                >\n              ) => {\n                return client.query<").concat(op, ">({query: ").concat((0, pascal_case_1.pascalCase)(o.name.value), "Doc, ...options})\n              }\n            ");
                 }
             }
             if (o.operation == "mutation") {
-                operation = "export const " + o.name.value + " = (\n            options: Omit<\n              MutationOptions<any, " + opv + ">, \n              \"mutation\"\n            >\n          ) => {\n            const m = client.mutate<" + op + ", " + opv + ">({\n              mutation: " + (0, pascal_case_1.pascalCase)(o.name.value) + "Doc,\n              ...options,\n            });\n            return m;\n          }";
+                operation = "export const ".concat(o.name.value, " = (\n            options: Omit<\n              MutationOptions<any, ").concat(opv, ">, \n              \"mutation\"\n            >\n          ) => {\n            const m = client.mutate<").concat(op, ", ").concat(opv, ">({\n              mutation: ").concat((0, pascal_case_1.pascalCase)(o.name.value), "Doc,\n              ...options,\n            });\n            return m;\n          }");
             }
             if (o.operation == "subscription") {
-                operation = "export const " + o.name.value + " = (\n            options: Omit<SubscriptionOptions<" + opv + ">, \"query\">\n          ) => {\n            const q = client.subscribe<" + op + ", " + opv + ">(\n              {\n                query: " + (0, pascal_case_1.pascalCase)(o.name.value) + "Doc,\n                ...options,\n              }\n            )\n            return q;\n          }";
+                operation = "export const ".concat(o.name.value, " = (\n            options: Omit<SubscriptionOptions<").concat(opv, ">, \"query\">\n          ) => {\n            const q = client.subscribe<").concat(op, ", ").concat(opv, ">(\n              {\n                query: ").concat((0, pascal_case_1.pascalCase)(o.name.value), "Doc,\n                ...options,\n              }\n            )\n            return q;\n          }");
             }
             return operation;
         })
