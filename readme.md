@@ -61,14 +61,14 @@ By default, the plugin only generate observable queries, sometimes it may be use
 
 ```yml
 generates:
-path/to/file.ts:
- plugins:
-   - typescript
-   - typescript-operations
-   - graphql-codegen-svelte-apollo
- config:
-   clientPath: PATH_TO_APOLLO_CLIENT
-   asyncQuery: true
+  path/to/file.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - graphql-codegen-svelte-apollo
+    config:
+      clientPath: PATH_TO_APOLLO_CLIENT
+      asyncQuery: true
 ```
 
 ## Usage Example
@@ -102,13 +102,13 @@ And the following configuration:
 schema: YOUR_SCHEMA_HERE
 documents: "./src/**/*.graphql"
 generates:
-path/to/file.ts:
- plugins:
-   - typescript
-   - typescript-operations
-   - graphql-codegen-svelte-apollo
- config:
-   clientPath: PATH_TO_APOLLO_CLIENT
+  path/to/file.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - graphql-codegen-svelte-apollo
+    config:
+      clientPath: PATH_TO_APOLLO_CLIENT
 ```
 
 Codegen will pre-compile the GraphQL operation into a `DocumentNode` object, and generate a ready-to-use Apollo query for each operation you have.
@@ -163,14 +163,14 @@ And the following configuration:
 schema: YOUR_SCHEMA_HERE
 documents: "./src/**/*.graphql"
 generates:
-path/to/file.ts:
- plugins:
-   - typescript
-   - typescript-operations
-   - graphql-codegen-svelte-apollo
- config:
-   clientPath: PATH_TO_APOLLO_CLIENT
-   asyncQuery: true
+  path/to/file.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - graphql-codegen-svelte-apollo
+    config:
+      clientPath: PATH_TO_APOLLO_CLIENT
+      asyncQuery: true
 ```
 
 Codegen will pre-compile the GraphQL operation into a `DocumentNode` object, and generate a ready-to-use Apollo query for each operation you have.
