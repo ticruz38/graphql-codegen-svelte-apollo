@@ -182,6 +182,7 @@ module.exports = {
   validate: (schema, documents, config, outputFile, allPlugins) => {
     if (!config.clientPath) {
       console.warn("Client path is not present in config");
+      process.exit(1);
     }
   },
 } as CodegenPlugin;
