@@ -1,13 +1,13 @@
 {
   "name": "graphql-codegen-svelte-apollo",
   "author": "Thibaut Duchêne",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "GraphQL Code Generator plugin to generate client queries from graphql",
   "main": "src/index.js",
   "license": "MIT",
   "scripts": {
     "release": "standard-version",
-    "compile": ""
+    "compile": "tsc"
   },
   "dependencies": {
     "@apollo/client": "^3.2.7",

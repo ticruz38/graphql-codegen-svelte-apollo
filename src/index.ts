@@ -22,7 +22,7 @@ const operationMap = {
 
 module.exports = {
   plugin: (schema, documents, config, info) => {
-    const allAst = concatAST(documents.map((d) => d.document));
+    const allAst = concatAST(documents.map((d) => d.document!));
 
     const allFragments: LoadedFragment[] = [
       ...(
@@ -55,7 +55,7 @@ module.exports = {
       operations.some((op) => op.operation == "query")
         ? `ApolloQueryResult, ObservableQuery, WatchQueryOptions, ${
             config.asyncQuery ? "QueryOptions, " : ""
-          }`
+          } ApolloError, `
         : ""
     }${
       operations.some((op) => op.operation == "mutation")
@@ -79,18 +79,14 @@ module.exports = {
 
     const ops = operations
       .map((o) => {
-        const dsl = `export const ${o.name.value}Doc = gql\`${
-          documents.find((d) =>
-            d.rawSDL.includes(`${o.operation} ${o.name.value}`)
-          ).rawSDL
-        }\``;
+        if (!o.name) return;
         const op = `${pascalCase(o.name.value)}${pascalCase(o.operation)}`;
         const opv = `${op}Variables`;
         let operation;
         if (o.operation == "query") {
           operation = `export const ${o.name.value} = (
             options: Omit<
-              WatchQueryOptions<${opv}>, 
+              WatchQueryOptions<${opv}>,
               "query"
             >
           ): Readable<
@@ -115,10 +111,15 @@ module.exports = {
             >(
               { data: {} as any, loading: true, error: undefined, networkStatus: 1, query: q },
               (set) => {
-                q.subscribe((v: any) => {
-                  set({ ...v, query: q });
-                });
-              }
+                q.subscribe(
+                  (v: any) => {
+                    set({ ...v, query: q });
+                  },
+                  (error: ApolloError) => {
+                    set({ data: {}, loading: false, error, networkStatus: 8, query: q });
+                  }
+                );
+              },
             );
             return result;
           }
@@ -143,7 +144,7 @@ module.exports = {
         if (o.operation == "mutation") {
           operation = `export const ${o.name.value} = (
             options: Omit<
-              MutationOptions<any, ${opv}>, 
+              MutationOptions<any, ${opv}>,
               "mutation"
             >
           ) => {
@@ -169,6 +170,7 @@ module.exports = {
         }
         return operation;
       })
+      .filter((o) => o !== undefined)
       .join("\n");
     return {
       prepend: imports,
